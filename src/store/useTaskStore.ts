@@ -16,7 +16,7 @@ interface TaskState {
   updateConfig: (updates: Partial<AppConfig>) => void;
   
   // Tasks
-  addTask: (title: string) => void;
+  addTask: (title: string, dueDate?: string) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   restoreTask: (id: string) => void;
@@ -87,13 +87,14 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     get().syncWithBackend();
   },
 
-  addTask: (title: string) => {
+  addTask: (title: string, dueDate?: string) => {
     const newTask: Task = {
       id: crypto.randomUUID(),
       title,
       status: 'todo',
       priority: 'medium',
       order: get().tasks.length > 0 ? Math.max(...get().tasks.map(t => t.order)) + 1 : 0,
+      dueDate,
       tags: [],
       subTasks: [],
       isDeleted: false,

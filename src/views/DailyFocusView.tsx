@@ -4,6 +4,7 @@ import { ko } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTaskStore } from '../store/useTaskStore';
+import Checkbox from '../components/Checkbox';
 import styles from './DailyFocusView.module.css';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 
@@ -30,7 +31,7 @@ const DailyFocusView: React.FC = () => {
 
   const handleAddTask = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && taskInput.trim()) {
-      addTask(taskInput.trim());
+      addTask(taskInput.trim(), today);
       setTaskInput('');
     }
   };
@@ -75,7 +76,7 @@ const DailyFocusView: React.FC = () => {
   };
 
   const todayTasks = tasks
-    .filter(t => !t.isDeleted)
+    .filter(t => !t.isDeleted && t.dueDate === today)
     .sort((a, b) => a.order - b.order);
 
   return (
@@ -124,7 +125,7 @@ const DailyFocusView: React.FC = () => {
         ) : (
           /* [기본] 할 일 목록 화면 */
           <>
-            <h1 className={styles.title}>오늘의 할 일</h1>
+            <h1 className={styles.title}>오늘</h1>
             <div className={styles.inputGroup}>
               <input
                 type="text"
@@ -144,14 +145,9 @@ const DailyFocusView: React.FC = () => {
                     key={task.id} 
                     className={`${styles.taskItem} ${task.status === 'done' ? styles.done : ''}`}
                   >
-                    <input
-                      type="checkbox"
-                      className={styles.checkbox}
+                    <Checkbox
                       checked={task.status === 'done'}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleTaskStatus(task.id);
-                      }}
+                      onChange={() => toggleTaskStatus(task.id)}
                     />
                     <span 
                       className={styles.taskTitle}

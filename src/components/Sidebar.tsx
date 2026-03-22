@@ -6,12 +6,13 @@ import {
   Folder, 
   Tag as TagIcon,
   Layout,
+  ListTodo,
   PanelLeftClose,
   PanelLeftOpen
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
-export type ViewType = 'today' | 'calendar' | 'trash' | 'settings';
+export type ViewType = 'today' | 'all' | 'calendar' | 'trash' | 'settings';
 
 interface SidebarProps {
   activeView: ViewType;
@@ -32,10 +33,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onViewChange, isCollapsed
         <div 
           className={`${styles.menuItem} ${activeView === 'today' ? styles.active : ''}`}
           onClick={() => onViewChange('today')}
-          title="오늘의 포커스"
+          title="오늘"
         >
           <Layout className={styles.icon} />
-          <span className={styles.menuText}>오늘의 포커스</span>
+          <span className={styles.menuText}>오늘</span>
+        </div>
+        <div 
+          className={`${styles.menuItem} ${activeView === 'all' ? styles.active : ''}`}
+          onClick={() => onViewChange('all')}
+          title="할 일 목록"
+        >
+          <ListTodo className={styles.icon} />
+          <span className={styles.menuText}>할 일 목록</span>
         </div>
         <div 
           className={`${styles.menuItem} ${activeView === 'calendar' ? styles.active : ''}`}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import DailyFocusView from './views/DailyFocusView';
+import AllTasksView from './views/AllTasksView';
 import CalendarView from './views/CalendarView';
 import TrashView from './views/TrashView';
 import SettingsView from './views/SettingsView';
@@ -43,6 +44,8 @@ function App() {
     switch (activeView) {
       case 'today':
         return <DailyFocusView />;
+      case 'all':
+        return <AllTasksView />;
       case 'calendar':
         return <CalendarView />;
       case 'trash':
