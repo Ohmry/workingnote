@@ -58,8 +58,29 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       const actualPath = await invoke<string>('get_data_path_string');
       
       if (data && (data.version || data.tasks)) {
+        let tasks = data.tasks || [];
+        
+        // 테스트 데이터 생성 (태스크가 전혀 없을 때만)
+        if (tasks.length === 0) {
+          for (let i = 1; i <= 50; i++) {
+            tasks.push({
+              id: crypto.randomUUID(),
+              title: `테스트 할 일 항목 #${i}`,
+              description: `이것은 #${i}번 항목에 대한 상세 테스트 내용입니다. 스크롤 테스트를 위해 생성되었습니다.`,
+              status: 'todo',
+              priority: i % 3 === 0 ? 'high' : 'medium',
+              order: i,
+              tags: ['test'],
+              subTasks: [],
+              isDeleted: false,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            });
+          }
+        }
+
         set((state) => ({
-          tasks: data.tasks || [],
+          tasks: tasks,
           notes: data.notes || [],
           categories: data.categories || [],
           tags: data.tags || [],

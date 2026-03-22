@@ -38,6 +38,46 @@
   display: none;
 }
 
+.searchSection {
+  padding: var(--spacing-md);
+}
+
+.collapsed .searchSection {
+  padding: var(--spacing-md) 0;
+  display: flex;
+  justify-content: center;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 8px 12px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-sub);
+}
+
+.collapsed .searchBar {
+  padding: 8px;
+  border: none;
+  background: none;
+}
+
+.searchIcon {
+  flex-shrink: 0;
+}
+
+.searchInput {
+  width: 100%;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
 .menuSection {
   flex: 1;
   padding: var(--spacing-sm);

@@ -53,12 +53,48 @@
   margin-bottom: var(--spacing-lg);
 }
 
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+}
+
 .title {
   font-size: 20px;
   font-weight: 700;
   margin: 0;
-  margin-bottom: var(--spacing-xl);
   color: var(--text-main);
+}
+
+.todayButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.todayButton:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+[data-theme='dark'] .todayButton {
+  color: #818cf8; /* 밝은 Indigo 400 */
+  border-color: #818cf8;
+}
+
+[data-theme='dark'] .todayButton:hover {
+  background-color: #818cf8;
+  color: #ffffff;
 }
 
 .toggleButton {

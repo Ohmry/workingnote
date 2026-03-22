@@ -9,12 +9,13 @@ import {
   ListTodo,
   PanelLeftClose,
   PanelLeftOpen,
-  Plus
+  Plus,
+  Search
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 import { useTaskStore } from '../store/useTaskStore';
 
-export type ViewType = 'today' | 'all' | 'calendar' | 'trash' | 'settings' | 'category' | 'tag';
+export type ViewType = 'today' | 'all' | 'calendar' | 'trash' | 'settings' | 'category' | 'tag' | 'search';
 
 interface SidebarProps {
   activeView: ViewType;
@@ -23,6 +24,8 @@ interface SidebarProps {
   onToggle: () => void;
   activeFilter?: string;
   onFilterChange: (type: ViewType, filterId: string) => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -31,7 +34,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed, 
   onToggle,
   activeFilter,
-  onFilterChange
+  onFilterChange,
+  searchQuery,
+  onSearchChange
 }) => {
   const { categories, tags, addCategory } = useTaskStore();
 
@@ -49,22 +54,36 @@ const Sidebar: React.FC<SidebarProps> = ({
         {isCollapsed && <Layout className={styles.icon} style={{ color: 'var(--primary-color)' }} />}
       </div>
 
+      <div className={styles.searchSection}>
+        <div className={styles.searchBar}>
+          <Search size={16} className={styles.searchIcon} />
+          {!isCollapsed && (
+            <input 
+              className={styles.searchInput}
+              placeholder="검색..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+          )}
+        </div>
+      </div>
+
       <nav className={styles.menuSection}>
         <div 
           className={`${styles.menuItem} ${activeView === 'today' ? styles.active : ''}`}
           onClick={() => onViewChange('today')}
-          title="업무일지"
+          title="일지"
         >
           <Layout className={styles.icon} />
-          <span className={styles.menuText}>업무일지</span>
+          <span className={styles.menuText}>일지</span>
         </div>
         <div 
           className={`${styles.menuItem} ${activeView === 'all' ? styles.active : ''}`}
           onClick={() => onViewChange('all')}
-          title="할 일 목록"
+          title="목록"
         >
           <ListTodo className={styles.icon} />
-          <span className={styles.menuText}>할 일 목록</span>
+          <span className={styles.menuText}>목록</span>
         </div>
         <div 
           className={`${styles.menuItem} ${activeView === 'calendar' ? styles.active : ''}`}
