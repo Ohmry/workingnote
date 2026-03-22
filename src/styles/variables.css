@@ -1,16 +1,16 @@
 :root {
-  /* Color Palette */
+  /* Common Status Colors */
   --primary-color: #4f46e5;
   --primary-hover: #4338ca;
   --secondary-color: #eef2ff;
-  --bg-color: #f9fafb;
-  --surface-color: #ffffff;
-  
-  --text-main: #111827;
-  --text-sub: #6b7280;
-  
   --success-color: #10b981;
   --danger-color: #ef4444;
+
+  /* Light Theme (Default) */
+  --bg-color: #f9fafb;
+  --surface-color: #ffffff;
+  --text-main: #111827;
+  --text-sub: #6b7280;
   --border-color: #e5e7eb;
 
   /* Spacing */
@@ -29,14 +29,46 @@
   --font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
 }
 
+/* Dark Theme */
+[data-theme='dark'] {
+  --bg-color: #111827;
+  --surface-color: #1f2937;
+  --text-main: #f9fafb;
+  --text-sub: #9ca3af;
+  --border-color: #374151;
+  --secondary-color: #3730a3; /* 조금 더 밝은 Indigo 800 */
+  --active-text: #ffffff;     /* 활성 텍스트 색상 추가 */
+}
+
 body {
   margin: 0;
   padding: 0;
   font-family: var(--font-family);
   background-color: var(--bg-color);
   color: var(--text-main);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+input, textarea, button {
+  font-family: inherit;
+  color: inherit;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Custom scrollbar for Dark Theme */
+[data-theme='dark'] ::-webkit-scrollbar {
+  width: 10px;
+}
+[data-theme='dark'] ::-webkit-scrollbar-track {
+  background: #111827;
+}
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 5px;
+}
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
 }

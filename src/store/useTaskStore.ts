@@ -47,15 +47,19 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   loadData: async () => {
     try {
       const data = await invoke<AppData>('get_initial_data');
-      if (data && data.version) {
-        set({
+      const actualPath = await invoke<string>('get_data_path_string');
+      
+      if (data && (data.version || data.tasks)) {
+        set((state) => ({
           tasks: data.tasks || [],
           notes: data.notes || [],
           categories: data.categories || [],
           tags: data.tags || [],
-          version: data.version
-          // Config는 별도 API가 필요할 수 있으나 AppData에 통합되어 있다고 가정
-        });
+          version: data.version || state.version,
+          config: { ...state.config, storagePath: actualPath }
+        }));
+      } else {
+        set((state) => ({ config: { ...state.config, storagePath: actualPath } }));
       }
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -80,7 +84,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
   updateConfig: (updates: Partial<AppConfig>) => {
     set((state) => ({ config: { ...state.config, ...updates } }));
-    // Config도 syncWithBackend 또는 별도 API로 저장 필요
+    get().syncWithBackend();
   },
 
   addTask: (title: string) => {

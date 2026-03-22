@@ -77,7 +77,8 @@ pub struct AppData {
 }
 
 fn get_data_path(app_handle: &tauri::AppHandle) -> PathBuf {
-    let mut path = app_handle.path().app_data_dir().expect("Failed to get app data dir");
+    let mut path = app_handle.path().document_dir().expect("Failed to get documents dir");
+    path.push(".workingnote");
     if !path.exists() {
         let _ = fs::create_dir_all(&path);
     }
@@ -116,11 +117,17 @@ async fn save_data(app_handle: tauri::AppHandle, data: AppData) -> Result<(), St
     Ok(())
 }
 
+#[tauri::command]
+fn get_data_path_string(app_handle: tauri::AppHandle) -> String {
+    let path = get_data_path(&app_handle);
+    path.to_string_lossy().to_string()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![get_initial_data, save_data])
+        .invoke_handler(tauri::generate_handler![get_initial_data, save_data, get_data_path_string])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -88,10 +88,13 @@
   border-radius: var(--radius-md);
   font-size: 14px;
   outline: none;
+  background-color: var(--bg-color);
+  color: var(--text-main);
 }
 
 .quickInput:focus {
   border-color: var(--primary-color);
+  background-color: var(--surface-color);
 }
 
 .taskList {
@@ -125,6 +128,78 @@
 .taskTitle {
   flex: 1;
   font-size: 14px;
+  cursor: pointer;
+}
+
+.taskTitle:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+/* Detail View Styles */
+.detailContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.backButton, .deleteButton {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-sub);
+  transition: all 0.2s;
+}
+
+.backButton:hover {
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+}
+
+.deleteButton:hover {
+  background-color: #fee2e2;
+  color: var(--danger-color);
+}
+
+.detailTitleInput {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  border-bottom: 2px solid transparent;
+  outline: none;
+  padding: 4px 0;
+  color: var(--text-main);
+  background: transparent;
+}
+
+.detailTitleInput:focus {
+  border-bottom-color: var(--primary-color);
+}
+
+.taskDescriptionEditor {
+  width: 100%;
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: none;
+  font-family: inherit;
+  color: var(--text-main);
+  background: transparent;
 }
 
 .emptyState {
@@ -144,6 +219,7 @@
   resize: none;
   font-family: inherit;
   color: var(--text-main);
+  background: transparent;
 }
 
 .markdownPreview {
