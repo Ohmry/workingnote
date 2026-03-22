@@ -4,8 +4,13 @@ import Checkbox from '../components/Checkbox';
 import styles from './DailyFocusView.module.css';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 
-const AllTasksView: React.FC = () => {
-  const { tasks, addTask, updateTask, deleteTask, toggleTaskStatus } = useTaskStore();
+interface AllTasksViewProps {
+  viewType: 'all' | 'category' | 'tag';
+  filterId?: string;
+}
+
+const AllTasksView: React.FC<AllTasksViewProps> = ({ viewType, filterId }) => {
+  const { tasks, addTask, updateTask, deleteTask, toggleTaskStatus, categories } = useTaskStore();
   
   const [taskInput, setTaskInput] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -14,7 +19,7 @@ const AllTasksView: React.FC = () => {
 
   const handleAddTask = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && taskInput.trim()) {
-      addTask(taskInput.trim());
+      addTask(taskInput.trim(), viewType === 'all' ? undefined : undefined); // 카테고리 자동할당 등 추가 가능
       setTaskInput('');
     }
   };
@@ -31,9 +36,26 @@ const AllTasksView: React.FC = () => {
     }
   };
 
-  const generalTasks = tasks
-    .filter(t => !t.isDeleted && !t.dueDate)
-    .sort((a, b) => a.order - b.order);
+  // 필터링 로직
+  const filteredTasks = tasks.filter(t => {
+    if (t.isDeleted) return false;
+    
+    if (viewType === 'all') return !t.dueDate;
+    if (viewType === 'category') return t.categoryId === filterId;
+    if (viewType === 'tag') return t.tags.includes(filterId || '');
+    
+    return true;
+  }).sort((a, b) => a.order - b.order);
+
+  const getTitle = () => {
+    if (viewType === 'all') return '할 일 목록';
+    if (viewType === 'category') {
+      const cat = categories.find(c => c.id === filterId);
+      return cat ? `카테고리: ${cat.name}` : '카테고리';
+    }
+    if (viewType === 'tag') return `태그: #${filterId}`;
+    return '할 일';
+  };
 
   return (
     <div className={styles.container}>
@@ -74,7 +96,7 @@ const AllTasksView: React.FC = () => {
           </div>
         ) : (
           <>
-            <h1 className={styles.title}>할 일 목록</h1>
+            <h1 className={styles.title}>{getTitle()}</h1>
             <div className={styles.inputGroup}>
               <input
                 type="text"
@@ -86,10 +108,10 @@ const AllTasksView: React.FC = () => {
               />
             </div>
             <ul className={styles.taskList}>
-              {generalTasks.length === 0 ? (
+              {filteredTasks.length === 0 ? (
                 <p className={styles.emptyState}>등록된 할 일이 없습니다.</p>
               ) : (
-                generalTasks.map((task) => (
+                filteredTasks.map((task) => (
                   <li 
                     key={task.id} 
                     className={`${styles.taskItem} ${task.status === 'done' ? styles.done : ''}`}

@@ -6,16 +6,26 @@ import remarkGfm from 'remark-gfm';
 import { useTaskStore } from '../store/useTaskStore';
 import Checkbox from '../components/Checkbox';
 import styles from './DailyFocusView.module.css';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Edit3, Eye } from 'lucide-react';
 
-const DailyFocusView: React.FC = () => {
+interface DailyFocusViewProps {
+  date: string; // YYYY-MM-DD
+}
+
+const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date }) => {
   const { tasks, addTask, updateTask, deleteTask, toggleTaskStatus, getNote, saveNote } = useTaskStore();
-  const today = format(new Date(), 'yyyy-MM-dd');
-  const displayDate = format(new Date(), 'yyyy년 M월 d일 eeee', { locale: ko });
+  
+  // 날짜 변환 시 에러 방지를 위한 처리
+  let displayDate = "";
+  try {
+    displayDate = format(new Date(date), 'yyyy년 M월 d일 eeee', { locale: ko });
+  } catch (e) {
+    displayDate = date;
+  }
   
   const [taskInput, setTaskInput] = useState('');
   const [noteContent, setNoteContent] = useState('');
-  const [isEditMode, setIsEditMode] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false); // 기본값: 미리보기
   const [taskListHeight, setTaskListHeight] = useState(40); // %
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -23,15 +33,19 @@ const DailyFocusView: React.FC = () => {
   const selectedTask = tasks.find(t => t.id === selectedTaskId);
 
   useEffect(() => {
-    const existingNote = getNote(today);
+    const existingNote = getNote(date);
     if (existingNote) {
       setNoteContent(existingNote.content);
+    } else {
+      setNoteContent('');
     }
-  }, [getNote, today]);
+    // 날짜가 바뀌면 선택된 태스크 초기화
+    setSelectedTaskId(null);
+  }, [getNote, date]);
 
   const handleAddTask = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && taskInput.trim()) {
-      addTask(taskInput.trim(), today);
+      addTask(taskInput.trim(), date);
       setTaskInput('');
     }
   };
@@ -39,18 +53,19 @@ const DailyFocusView: React.FC = () => {
   const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const content = e.target.value;
     setNoteContent(content);
-    saveNote(today, content);
+    saveNote(date, content);
+  };
+
+  // 누락되었던 핸들러들 추가
+  const handleTaskTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (selectedTaskId) {
+      updateTask(selectedTaskId, { title: e.target.value });
+    }
   };
 
   const handleTaskDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (selectedTaskId) {
       updateTask(selectedTaskId, { description: e.target.value });
-    }
-  };
-
-  const handleTaskTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (selectedTaskId) {
-      updateTask(selectedTaskId, { title: e.target.value });
     }
   };
 
@@ -76,18 +91,16 @@ const DailyFocusView: React.FC = () => {
   };
 
   const todayTasks = tasks
-    .filter(t => !t.isDeleted && t.dueDate === today)
+    .filter(t => !t.isDeleted && t.dueDate === date)
     .sort((a, b) => a.order - b.order);
 
   return (
     <div className={styles.container} ref={containerRef}>
-      {/* 상단 섹션: 할 일 목록 또는 할 일 상세 편집기 */}
       <section 
         className={styles.taskListSection} 
         style={{ height: `${taskListHeight}%` }}
       >
         {selectedTaskId && selectedTask ? (
-          /* [상단 전환] 할 일 상세 편집 화면 */
           <div className={styles.detailContainer}>
             <div className={styles.detailHeader}>
               <button 
@@ -123,9 +136,8 @@ const DailyFocusView: React.FC = () => {
             />
           </div>
         ) : (
-          /* [기본] 할 일 목록 화면 */
           <>
-            <h1 className={styles.title}>오늘</h1>
+            <h1 className={styles.title}>{displayDate}</h1>
             <div className={styles.inputGroup}>
               <input
                 type="text"
@@ -138,7 +150,7 @@ const DailyFocusView: React.FC = () => {
             </div>
             <ul className={styles.taskList}>
               {todayTasks.length === 0 ? (
-                <p className={styles.emptyState}>오늘 예정된 할 일이 없습니다.</p>
+                <p className={styles.emptyState}>예정된 할 일이 없습니다.</p>
               ) : (
                 todayTasks.map((task) => (
                   <li 
@@ -165,22 +177,31 @@ const DailyFocusView: React.FC = () => {
 
       <div className={styles.divider} onMouseDown={handleMouseDown} />
 
-      {/* 하단 섹션: 일일 업무 일지 (유지) */}
       <section className={styles.noteSection}>
         <div className={styles.noteHeader}>
-          <h2 className={styles.title}>{displayDate}</h2>
+          <h2 className={styles.title}>업무일지</h2>
           <button 
             className={styles.toggleButton} 
             onClick={() => setIsEditMode(!isEditMode)}
           >
-            {isEditMode ? '미리보기' : '편집하기'}
+            {isEditMode ? (
+              <>
+                <Eye size={14} />
+                <span>미리보기</span>
+              </>
+            ) : (
+              <>
+                <Edit3 size={14} />
+                <span>편집하기</span>
+              </>
+            )}
           </button>
         </div>
         
         {isEditMode ? (
           <textarea
             className={styles.markdownEditor}
-            placeholder="오늘의 업무 전체를 아우르는 일지를 작성해 보세요..."
+            placeholder="오늘의 업무 일지를 작성해 보세요..."
             value={noteContent}
             onChange={handleNoteChange}
           />

@@ -26,6 +26,14 @@ interface TaskState {
   // Notes
   getNote: (date: string) => DailyNote | undefined;
   saveNote: (date: string, content: string) => void;
+
+  // Categories
+  addCategory: (name: string, color: string) => void;
+  deleteCategory: (id: string) => void;
+  
+  // Tags
+  addTag: (name: string, color?: string) => void;
+  deleteTag: (name: string) => void;
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -180,6 +188,45 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       }
       return { notes: newNotes };
     });
+    get().syncWithBackend();
+  },
+
+  addCategory: (name: string, color: string) => {
+    const newCategory: Category = {
+      id: crypto.randomUUID(),
+      name,
+      color,
+      order: get().categories.length
+    };
+    set((state) => ({ categories: [...state.categories, newCategory] }));
+    get().syncWithBackend();
+  },
+
+  deleteCategory: (id: string) => {
+    set((state) => ({
+      categories: state.categories.filter(c => c.id !== id),
+      // 해당 카테고리가 할당된 태스크들은 카테고리 해제
+      tasks: state.tasks.map(t => t.categoryId === id ? { ...t, categoryId: undefined } : t)
+    }));
+    get().syncWithBackend();
+  },
+
+  addTag: (name: string, color?: string) => {
+    if (get().tags.some(t => t.name === name)) return;
+    const newTag: Tag = { name, color };
+    set((state) => ({ tags: [...state.tags, newTag] }));
+    get().syncWithBackend();
+  },
+
+  deleteTag: (name: string) => {
+    set((state) => ({
+      tags: state.tags.filter(t => t.name !== name),
+      // 태스크들에서 해당 태그 제거
+      tasks: state.tasks.map(t => ({
+        ...t,
+        tags: t.tags.filter(tag => tag !== name)
+      }))
+    }));
     get().syncWithBackend();
   },
 }));

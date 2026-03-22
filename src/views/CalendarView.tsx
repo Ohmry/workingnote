@@ -16,7 +16,11 @@ import { ChevronLeft, ChevronRight, StickyNote } from 'lucide-react';
 import { useTaskStore } from '../store/useTaskStore';
 import styles from './CalendarView.module.css';
 
-const CalendarView: React.FC = () => {
+interface CalendarViewProps {
+  onDateSelect: (date: string) => void;
+}
+
+const CalendarView: React.FC<CalendarViewProps> = ({ onDateSelect }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const { tasks, notes } = useTaskStore();
 
@@ -65,6 +69,7 @@ const CalendarView: React.FC = () => {
                 ${!isCurrentMonth ? styles.notCurrentMonth : ''} 
                 ${isToday ? styles.today : ''}
               `}
+              onClick={() => onDateSelect(dayStr)}
             >
               <span className={styles.dayNumber}>{format(day, 'd')}</span>
               <div className={styles.indicators}>

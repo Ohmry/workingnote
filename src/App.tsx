@@ -6,11 +6,14 @@ import TrashView from './views/TrashView';
 import SettingsView from './views/SettingsView';
 import Sidebar, { ViewType } from './components/Sidebar';
 import { useTaskStore } from './store/useTaskStore';
+import { format } from 'date-fns';
 
 function App() {
   const loadData = useTaskStore((state) => state.loadData);
   const theme = useTaskStore((state) => state.config.theme);
   const [activeView, setActiveView] = useState<ViewType>('today');
+  const [filterId, setFilterId] = useState<string | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
@@ -31,7 +34,6 @@ function App() {
 
     applyTheme(theme);
 
-    // 시스템 테마 변경 감지 (시스템 모드일 때만)
     if (theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleChange = () => applyTheme('system');
@@ -40,20 +42,40 @@ function App() {
     }
   }, [theme]);
 
+  const handleViewChange = (view: ViewType) => {
+    setActiveView(view);
+    setFilterId(undefined);
+    if (view === 'today') {
+      setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
+    }
+  };
+
+  const handleFilterChange = (type: ViewType, id: string) => {
+    setActiveView(type);
+    setFilterId(id);
+  };
+
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+    setActiveView('today');
+  };
+
   const renderView = () => {
     switch (activeView) {
       case 'today':
-        return <DailyFocusView />;
+        return <DailyFocusView date={selectedDate} />;
       case 'all':
-        return <AllTasksView />;
+      case 'category':
+      case 'tag':
+        return <AllTasksView viewType={activeView as any} filterId={filterId} />;
       case 'calendar':
-        return <CalendarView />;
+        return <CalendarView onDateSelect={handleDateSelect} />;
       case 'trash':
         return <TrashView />;
       case 'settings':
         return <SettingsView />;
       default:
-        return <DailyFocusView />;
+        return <DailyFocusView date={selectedDate} />;
     }
   };
 
@@ -61,9 +83,11 @@ function App() {
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
       <Sidebar 
         activeView={activeView} 
-        onViewChange={setActiveView} 
+        onViewChange={handleViewChange} 
         isCollapsed={isSidebarCollapsed}
         onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        activeFilter={filterId}
+        onFilterChange={handleFilterChange}
       />
       <main style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         {renderView()}
