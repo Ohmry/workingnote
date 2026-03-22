@@ -7,9 +7,10 @@ import { ArrowLeft, Trash2 } from 'lucide-react';
 interface AllTasksViewProps {
   viewType: 'all' | 'category' | 'tag';
   filterId?: string;
+  onToggleTask: (id: string) => void;
 }
 
-const AllTasksView: React.FC<AllTasksViewProps> = ({ viewType, filterId }) => {
+const AllTasksView: React.FC<AllTasksViewProps> = ({ viewType, filterId, onToggleTask }) => {
   const { tasks, addTask, updateTask, deleteTask, toggleTaskStatus, categories } = useTaskStore();
   
   const [taskInput, setTaskInput] = useState('');
@@ -55,20 +56,17 @@ const AllTasksView: React.FC<AllTasksViewProps> = ({ viewType, filterId }) => {
   };
 
   return (
-    <div className={styles.container} style={{ backgroundColor: 'var(--surface-color)' }}>
-      <section className={styles.taskListSection} style={{ height: '100%', padding: '40px', overflowY: 'auto', border: 'none' }}>
+    <div className={styles.container} style={{ backgroundColor: 'var(--surface-color)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '40px 40px 0 40px', flexShrink: 0 }}>
         {selectedTaskId && selectedTask ? (
-          <div className={styles.detailContainer}>
-            <div className={styles.detailHeader}>
-              <button className={styles.backButton} onClick={() => setSelectedTaskId(null)} title="목록으로 돌아가기">
-                <ArrowLeft size={18} />
-              </button>
-              <input className={styles.detailTitleInput} value={selectedTask.title} onChange={handleTaskTitleChange} />
-              <button className={styles.deleteButton} onClick={() => { if (confirm('이 항목을 삭제하시겠습니까?')) { deleteTask(selectedTask.id); setSelectedTaskId(null); } }}>
-                <Trash2 size={18} />
-              </button>
-            </div>
-            <textarea className={styles.taskDescriptionEditor} placeholder="상세 내용을 적어보세요..." value={selectedTask.description || ''} onChange={handleTaskDescriptionChange} autoFocus />
+          <div className={styles.detailHeader}>
+            <button className={styles.backButton} onClick={() => setSelectedTaskId(null)} title="목록으로 돌아가기">
+              <ArrowLeft size={18} />
+            </button>
+            <input className={styles.detailTitleInput} value={selectedTask.title} onChange={handleTaskTitleChange} />
+            <button className={styles.deleteButton} onClick={() => { if (confirm('이 항목을 삭제하시겠습니까?')) { deleteTask(selectedTask.id); setSelectedTaskId(null); } }}>
+              <Trash2 size={18} />
+            </button>
           </div>
         ) : (
           <>
@@ -76,19 +74,26 @@ const AllTasksView: React.FC<AllTasksViewProps> = ({ viewType, filterId }) => {
             <div className={styles.inputGroup}>
               <input type="text" className={styles.quickInput} placeholder="새로운 항목을 추가하고 Enter를 누르세요" value={taskInput} onChange={(e) => setTaskInput(e.target.value)} onKeyDown={handleAddTask} />
             </div>
-            <ul className={styles.taskList}>
-              {filteredTasks.length === 0 ? (
-                <p className={styles.emptyState}>등록된 항목이 없습니다.</p>
-              ) : (
-                filteredTasks.map((task) => (
-                  <li key={task.id} className={`${styles.taskItem} ${task.status === 'done' ? styles.done : ''}`}>
-                    <Checkbox checked={task.status === 'done'} onChange={() => toggleTaskStatus(task.id)} />
-                    <span className={styles.taskTitle} onClick={() => setSelectedTaskId(task.id)}>{task.title}</span>
-                  </li>
-                ))
-              )}
-            </ul>
           </>
+        )}
+      </div>
+
+      <section className={styles.taskListSection} style={{ flex: 1, padding: '0 40px 40px 40px', overflowY: 'auto', border: 'none' }}>
+        {selectedTaskId && selectedTask ? (
+          <textarea className={styles.taskDescriptionEditor} placeholder="상세 내용을 적어보세요..." value={selectedTask.description || ''} onChange={handleTaskDescriptionChange} autoFocus />
+        ) : (
+          <ul className={styles.taskList}>
+            {filteredTasks.length === 0 ? (
+              <p className={styles.emptyState}>등록된 항목이 없습니다.</p>
+            ) : (
+              filteredTasks.map((task) => (
+                <li key={task.id} className={`${styles.taskItem} ${task.status === 'done' ? styles.done : ''}`}>
+                  <Checkbox checked={task.status === 'done'} onChange={() => onToggleTask(task.id)} />
+                  <span className={styles.taskTitle} onClick={() => setSelectedTaskId(task.id)}>{task.title}</span>
+                </li>
+              ))
+            )}
+          </ul>
         )}
       </section>
     </div>

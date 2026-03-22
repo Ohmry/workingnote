@@ -6,10 +6,55 @@
   overflow: hidden;
 }
 
+/* Landscape Layout */
+@media (orientation: landscape) and (min-width: 768px) {
+  .container {
+    flex-direction: row;
+  }
+
+  .taskListSection {
+    width: 40%;
+    max-width: 80%;
+    min-width: 250px;
+    height: 100% !important;
+    background-color: var(--surface-color);
+    border-right: 1px solid var(--border-color);
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .divider {
+    width: 1px !important;
+    height: 100% !important;
+    cursor: col-resize !important;
+    background-color: var(--border-color);
+  }
+
+  .divider::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -6px; /* 더 넓은 드래그 영역 */
+    right: -6px;
+    background-color: transparent;
+  }
+
+  .divider:hover {
+    width: 1px !important; /* 두께 증가 제거 */
+    background-color: var(--primary-color);
+  }
+
+  .noteSection {
+    flex: 1;
+    height: 100%;
+  }
+}
+
 .taskListSection {
   flex: 0 0 auto;
   min-height: 100px;
-  max-height: 80%;
   padding: var(--spacing-xl);
   overflow-y: auto;
   background-color: var(--surface-color);
@@ -88,7 +133,7 @@
 }
 
 [data-theme='dark'] .todayButton {
-  color: #818cf8; /* 밝은 Indigo 400 */
+  color: #818cf8;
   border-color: #818cf8;
 }
 

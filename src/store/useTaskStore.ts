@@ -60,30 +60,33 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       if (data && (data.version || data.tasks)) {
         let tasks = data.tasks || [];
         
-        // 테스트 데이터 생성 (태스크가 전혀 없을 때만)
-        if (tasks.length === 0) {
-          for (let i = 1; i <= 50; i++) {
+        // 테스트 데이터 생성 (태스크가 5개 미만일 때 강제 생성)
+        if (tasks.filter(t => !t.isDeleted).length < 5) {
+          const startIdx = tasks.length + 1;
+          for (let i = startIdx; i < startIdx + 50; i++) {
             tasks.push({
               id: crypto.randomUUID(),
-              title: `테스트 할 일 항목 #${i}`,
-              description: `이것은 #${i}번 항목에 대한 상세 테스트 내용입니다. 스크롤 테스트를 위해 생성되었습니다.`,
+              title: `테스트 항목 #${i}`,
+              description: `이것은 #${i}번 항목에 대한 상세 테스트 내용입니다. 스크롤과 필터링 테스트를 위해 생성되었습니다.`,
               status: 'todo',
-              priority: i % 3 === 0 ? 'high' : 'medium',
+              priority: i % 3 === 0 ? 'high' : (i % 2 === 0 ? 'medium' : 'low'),
               order: i,
-              tags: ['test'],
+              tags: ['test', i % 2 === 0 ? 'work' : 'personal'],
               subTasks: [],
               isDeleted: false,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             });
           }
+          // 생성된 데이터 즉시 백엔드 동기화 예약
+          setTimeout(() => get().syncWithBackend(), 1000);
         }
 
         set((state) => ({
           tasks: tasks,
           notes: data.notes || [],
           categories: data.categories || [],
-          tags: data.tags || [],
+          tags: data.tags || (tasks.length > 0 ? [{ name: 'test' }, { name: 'work' }, { name: 'personal' }] : []),
           version: data.version || state.version,
           config: { ...state.config, storagePath: actualPath }
         }));

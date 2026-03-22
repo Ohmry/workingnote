@@ -11,13 +11,13 @@ import { ArrowLeft, Trash2, Edit3, Eye, CalendarDays } from 'lucide-react';
 interface DailyFocusViewProps {
   date: string; // YYYY-MM-DD
   onDateSelect: (date: string) => void;
+  onToggleTask: (id: string) => void;
 }
 
-const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect }) => {
+const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onToggleTask }) => {
   const { tasks, addTask, updateTask, deleteTask, toggleTaskStatus, getNote, saveNote } = useTaskStore();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   
-  // 날짜 변환 시 에러 방지를 위한 처리
   let displayDate = "";
   try {
     displayDate = format(new Date(date), 'yyyy년 M월 d일 eeee', { locale: ko });
@@ -27,10 +27,19 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect }) =
   
   const [taskInput, setTaskInput] = useState('');
   const [noteContent, setNoteContent] = useState('');
-  const [isEditMode, setIsEditMode] = useState(false); // 기본값: 미리보기
-  const [taskListHeight, setTaskListHeight] = useState(40); // %
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [splitSize, setSplitSize] = useState(40); // %
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const selectedTask = tasks.find(t => t.id === selectedTaskId);
 
@@ -70,14 +79,20 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect }) =
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    const startX = e.clientX;
     const startY = e.clientY;
-    const startHeight = taskListHeight;
+    const startSize = splitSize;
 
     const onMouseMove = (moveEvent: MouseEvent) => {
       if (containerRef.current) {
-        const delta = ((moveEvent.clientY - startY) / containerRef.current.offsetHeight) * 100;
-        const newHeight = Math.min(Math.max(startHeight + delta, 10), 80);
-        setTaskListHeight(newHeight);
+        let delta = 0;
+        if (isLandscape) {
+          delta = ((moveEvent.clientX - startX) / containerRef.current.offsetWidth) * 100;
+        } else {
+          delta = ((moveEvent.clientY - startY) / containerRef.current.offsetHeight) * 100;
+        }
+        const newSize = Math.min(Math.max(startSize + delta, 10), 80);
+        setSplitSize(newSize);
       }
     };
 
@@ -98,7 +113,7 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect }) =
     <div className={styles.container} ref={containerRef}>
       <section 
         className={styles.taskListSection} 
-        style={{ height: `${taskListHeight}%` }}
+        style={isLandscape ? { width: `${splitSize}%`, height: '100%' } : { height: `${splitSize}%`, width: '100%' }}
       >
         {selectedTaskId && selectedTask ? (
           <div className={styles.detailContainer}>
@@ -170,7 +185,7 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect }) =
                   >
                     <Checkbox
                       checked={task.status === 'done'}
-                      onChange={() => toggleTaskStatus(task.id)}
+                      onChange={() => onToggleTask(task.id)}
                     />
                     <span 
                       className={styles.taskTitle}
