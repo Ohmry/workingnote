@@ -1,0 +1,180 @@
+import { create } from 'zustand';
+import { invoke } from '@tauri-apps/api/core';
+import { Task, DailyNote, Category, Tag, Status, AppData, AppConfig } from '../types';
+
+interface TaskState {
+  tasks: Task[];
+  notes: DailyNote[];
+  categories: Category[];
+  tags: Tag[];
+  version: number;
+  config: AppConfig;
+  
+  // Persistence
+  loadData: () => Promise<void>;
+  syncWithBackend: () => Promise<void>;
+  updateConfig: (updates: Partial<AppConfig>) => void;
+  
+  // Tasks
+  addTask: (title: string) => void;
+  updateTask: (id: string, updates: Partial<Task>) => void;
+  deleteTask: (id: string) => void;
+  restoreTask: (id: string) => void;
+  permanentDeleteTask: (id: string) => void;
+  toggleTaskStatus: (id: string) => void;
+  
+  // Notes
+  getNote: (date: string) => DailyNote | undefined;
+  saveNote: (date: string, content: string) => void;
+}
+
+const DEFAULT_CONFIG: AppConfig = {
+  version: 1,
+  storagePath: '',
+  theme: 'system',
+  language: 'ko',
+  lastBackupAt: new Date().toISOString(),
+};
+
+export const useTaskStore = create<TaskState>((set, get) => ({
+  tasks: [],
+  notes: [],
+  categories: [],
+  tags: [],
+  version: 1,
+  config: DEFAULT_CONFIG,
+
+  loadData: async () => {
+    try {
+      const data = await invoke<AppData>('get_initial_data');
+      if (data && data.version) {
+        set({
+          tasks: data.tasks || [],
+          notes: data.notes || [],
+          categories: data.categories || [],
+          tags: data.tags || [],
+          version: data.version
+          // Config는 별도 API가 필요할 수 있으나 AppData에 통합되어 있다고 가정
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    }
+  },
+
+  syncWithBackend: async () => {
+    const state = get();
+    const data: AppData = {
+      version: state.version,
+      tasks: state.tasks,
+      notes: state.notes,
+      categories: state.categories,
+      tags: state.tags,
+    };
+    try {
+      await invoke('save_data', { data });
+    } catch (error) {
+      console.error('Failed to save data:', error);
+    }
+  },
+
+  updateConfig: (updates: Partial<AppConfig>) => {
+    set((state) => ({ config: { ...state.config, ...updates } }));
+    // Config도 syncWithBackend 또는 별도 API로 저장 필요
+  },
+
+  addTask: (title: string) => {
+    const newTask: Task = {
+      id: crypto.randomUUID(),
+      title,
+      status: 'todo',
+      priority: 'medium',
+      order: get().tasks.length > 0 ? Math.max(...get().tasks.map(t => t.order)) + 1 : 0,
+      tags: [],
+      subTasks: [],
+      isDeleted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    set((state) => ({ tasks: [...state.tasks, newTask] }));
+    get().syncWithBackend();
+  },
+
+  updateTask: (id: string, updates: Partial<Task>) => {
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === id ? { ...task, ...updates, updatedAt: new Date().toISOString() } : task
+      ),
+    }));
+    get().syncWithBackend();
+  },
+
+  deleteTask: (id: string) => {
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === id ? { ...task, isDeleted: true, deletedAt: new Date().toISOString() } : task
+      ),
+    }));
+    get().syncWithBackend();
+  },
+
+  restoreTask: (id: string) => {
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === id ? { ...task, isDeleted: false, deletedAt: undefined } : task
+      ),
+    }));
+    get().syncWithBackend();
+  },
+
+  permanentDeleteTask: (id: string) => {
+    set((state) => ({
+      tasks: state.tasks.filter((task) => task.id !== id),
+    }));
+    get().syncWithBackend();
+  },
+
+  toggleTaskStatus: (id: string) => {
+    const task = get().tasks.find(t => t.id === id);
+    if (!task) return;
+
+    const newStatus: Status = task.status === 'done' ? 'todo' : 'done';
+    
+    let newOrder = task.order;
+    if (newStatus === 'done') {
+      newOrder = get().tasks.length > 0 ? Math.max(...get().tasks.map(t => t.order)) + 1000 : 1000;
+    }
+
+    get().updateTask(id, { status: newStatus, order: newOrder });
+  },
+
+  getNote: (date: string) => {
+    return get().notes.find((n) => n.date === date);
+  },
+
+  saveNote: (date: string, content: string) => {
+    set((state) => {
+      const existingNoteIndex = state.notes.findIndex((n) => n.date === date);
+      const now = new Date().toISOString();
+      
+      let newNotes = [...state.notes];
+      if (existingNoteIndex > -1) {
+        newNotes[existingNoteIndex] = {
+          ...newNotes[existingNoteIndex],
+          content,
+          lastSavedAt: now,
+        };
+      } else {
+        newNotes.push({
+          date,
+          content,
+          assets: [],
+          isDeleted: false,
+          lastSavedAt: now,
+        });
+      }
+      return { notes: newNotes };
+    });
+    get().syncWithBackend();
+  },
+}));

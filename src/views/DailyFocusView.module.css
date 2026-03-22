@@ -1,0 +1,170 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--bg-color);
+  overflow: hidden;
+}
+
+.taskListSection {
+  flex: 0 0 auto;
+  min-height: 100px;
+  max-height: 80%;
+  padding: var(--spacing-xl);
+  overflow-y: auto;
+  background-color: var(--surface-color);
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--border-color);
+  cursor: row-resize;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.divider::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+}
+
+.divider:hover {
+  background-color: var(--primary-color);
+}
+
+.noteSection {
+  flex: 1 1 auto;
+  padding: var(--spacing-xl);
+  overflow-y: auto;
+  background-color: var(--surface-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.noteHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  margin-bottom: var(--spacing-xl);
+  color: var(--text-main);
+}
+
+.toggleButton {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.toggleButton:hover {
+  background-color: #e0e7ff;
+}
+
+.inputGroup {
+  margin-bottom: var(--spacing-lg);
+}
+
+.quickInput {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  outline: none;
+}
+
+.quickInput:focus {
+  border-color: var(--primary-color);
+}
+
+.taskList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.taskItem {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid var(--border-color);
+  gap: var(--spacing-md);
+}
+
+.taskItem.done {
+  opacity: 0.6;
+}
+
+.taskItem.done .taskTitle {
+  text-decoration: line-through;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.taskTitle {
+  flex: 1;
+  font-size: 14px;
+}
+
+.emptyState {
+  color: var(--text-sub);
+  font-size: 14px;
+  text-align: center;
+  padding: var(--spacing-xl) 0;
+}
+
+.markdownEditor {
+  width: 100%;
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: none;
+  font-family: inherit;
+  color: var(--text-main);
+}
+
+.markdownPreview {
+  width: 100%;
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-main);
+  overflow-y: auto;
+}
+
+.markdownPreview h1, .markdownPreview h2, .markdownPreview h3 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.markdownPreview p {
+  margin-bottom: 16px;
+}
+
+.markdownPreview ul, .markdownPreview ol {
+  padding-left: 20px;
+  margin-bottom: 16px;
+}

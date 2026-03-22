@@ -1,0 +1,42 @@
+:root {
+  /* Color Palette */
+  --primary-color: #4f46e5;
+  --primary-hover: #4338ca;
+  --secondary-color: #eef2ff;
+  --bg-color: #f9fafb;
+  --surface-color: #ffffff;
+  
+  --text-main: #111827;
+  --text-sub: #6b7280;
+  
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --border-color: #e5e7eb;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Typography */
+  --font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-main);
+}
+
+* {
+  box-sizing: border-box;
+}
