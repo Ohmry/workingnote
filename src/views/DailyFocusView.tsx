@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { useTaskStore } from '../store/useTaskStore';
 import Checkbox from '../components/Checkbox';
 import styles from './DailyFocusView.module.css';
-import { ArrowLeft, Trash2, Edit3, Eye, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Trash2, Edit3, Eye, CalendarDays, ArrowUpDown } from 'lucide-react';
 
 interface DailyFocusViewProps {
   date: string; // YYYY-MM-DD
@@ -15,7 +15,7 @@ interface DailyFocusViewProps {
 }
 
 const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onToggleTask }) => {
-  const { tasks, addTask, updateTask, deleteTask, toggleTaskStatus, getNote, saveNote } = useTaskStore();
+  const { tasks, addTask, updateTask, deleteTask, getNote, saveNote } = useTaskStore();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   
   let displayDate = "";
@@ -31,6 +31,11 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
   const [splitSize, setSplitSize] = useState(40); // %
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+
+  // 필터 및 정렬 상태 추가
+  const [filterStatus, setFilterStatus] = useState<'all' | 'todo' | 'done'>('all');
+  const [sortBy, setSortBy] = useState<'order' | 'status' | 'title'>('order');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -105,9 +110,30 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
     document.addEventListener('mouseup', onMouseUp);
   };
 
-  const todayTasks = tasks
-    .filter(t => !t.isDeleted && t.dueDate === date)
-    .sort((a, b) => a.order - b.order);
+  const todayTasks = tasks.filter(t => {
+    if (t.isDeleted || t.dueDate !== date) return false;
+    
+    // 완료 상태 필터
+    if (filterStatus === 'todo') return t.status === 'todo';
+    if (filterStatus === 'done') return t.status === 'done';
+    
+    return true;
+  }).sort((a, b) => {
+    let comparison = 0;
+    
+    // 정렬 로직
+    if (sortBy === 'status') {
+      if (a.status === b.status) comparison = a.order - b.order;
+      else comparison = a.status === 'todo' ? -1 : 1;
+    } else if (sortBy === 'title') {
+      comparison = a.title.localeCompare(b.title);
+    } else {
+      comparison = a.order - b.order;
+    }
+
+    // 정렬 순서 적용
+    return sortOrder === 'asc' ? comparison : -comparison;
+  });
 
   return (
     <div className={styles.container} ref={containerRef}>
@@ -174,6 +200,60 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
                 onKeyDown={handleAddTask}
               />
             </div>
+
+            {/* 필터 및 정렬 UI */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', fontSize: '12px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => setFilterStatus('all')} 
+                  style={{ 
+                    background: 'none', border: 'none', color: filterStatus === 'all' ? 'var(--primary-color)' : 'var(--text-sub)', 
+                    fontWeight: filterStatus === 'all' ? 'bold' : 'normal', cursor: 'pointer' 
+                  }}
+                >전체</button>
+                <button 
+                  onClick={() => setFilterStatus('todo')} 
+                  style={{ 
+                    background: 'none', border: 'none', color: filterStatus === 'todo' ? 'var(--primary-color)' : 'var(--text-sub)', 
+                    fontWeight: filterStatus === 'todo' ? 'bold' : 'normal', cursor: 'pointer' 
+                  }}
+                >진행 중</button>
+                <button 
+                  onClick={() => setFilterStatus('done')} 
+                  style={{ 
+                    background: 'none', border: 'none', color: filterStatus === 'done' ? 'var(--primary-color)' : 'var(--text-sub)', 
+                    fontWeight: filterStatus === 'done' ? 'bold' : 'normal', cursor: 'pointer' 
+                  }}
+                >완료</button>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ color: 'var(--text-sub)' }}>정렬:</span>
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  style={{ 
+                    background: 'none', border: 'none', color: 'var(--text-main)', 
+                    fontSize: '12px', cursor: 'pointer', outline: 'none' 
+                  }}
+                >
+                  <option value="order">사용자 순서</option>
+                  <option value="status">상태별</option>
+                  <option value="title">가나다순</option>
+                </select>
+                <button 
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  style={{ 
+                    background: 'none', border: 'none', color: 'var(--text-sub)', 
+                    cursor: 'pointer', display: 'flex', alignItems: 'center',
+                    padding: '2px', borderRadius: '4px', transition: 'all 0.2s'
+                  }}
+                  title={sortOrder === 'asc' ? '오름차순' : '내림차순'}
+                >
+                  <ArrowUpDown size={14} style={{ transform: sortOrder === 'desc' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                </button>
+              </div>
+            </div>
+
             <ul className={styles.taskList}>
               {todayTasks.length === 0 ? (
                 <p className={styles.emptyState}>예정된 할 일이 없습니다.</p>

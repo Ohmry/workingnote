@@ -177,12 +177,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
     const newStatus: Status = task.status === 'done' ? 'todo' : 'done';
     
-    let newOrder = task.order;
-    if (newStatus === 'done') {
-      newOrder = get().tasks.length > 0 ? Math.max(...get().tasks.map(t => t.order)) + 1000 : 1000;
-    }
-
-    get().updateTask(id, { status: newStatus, order: newOrder });
+    get().updateTask(id, { status: newStatus });
   },
 
   getNote: (date: string) => {

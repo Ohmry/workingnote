@@ -15,6 +15,8 @@ import {
 import styles from './Sidebar.module.css';
 import { useTaskStore } from '../store/useTaskStore';
 
+import Logo from './Logo';
+
 export type ViewType = 'today' | 'all' | 'calendar' | 'trash' | 'settings' | 'category' | 'tag' | 'search';
 
 interface SidebarProps {
@@ -50,8 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
       <div className={styles.header}>
-        {!isCollapsed && <div className={styles.logoArea}>Working Note</div>}
-        {isCollapsed && <Layout className={styles.icon} style={{ color: 'var(--primary-color)' }} />}
+        <Logo collapsed={isCollapsed} />
       </div>
 
       <div className={styles.searchSection}>

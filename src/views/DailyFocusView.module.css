@@ -202,9 +202,21 @@
 .taskItem {
   display: flex;
   align-items: center;
-  padding: var(--spacing-md) 0;
+  padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--border-color);
   gap: var(--spacing-md);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  margin-bottom: 2px;
+}
+
+.taskItem:hover {
+  background-color: var(--bg-color);
+}
+
+[data-theme='dark'] .taskItem:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .taskItem.done {
@@ -224,12 +236,10 @@
 .taskTitle {
   flex: 1;
   font-size: 14px;
-  cursor: pointer;
 }
 
 .taskTitle:hover {
   color: var(--primary-color);
-  text-decoration: underline;
 }
 
 /* Detail View Styles */
@@ -325,22 +335,108 @@
   line-height: 1.6;
   color: var(--text-main);
   overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
-.markdownPreview h1, .markdownPreview h2, .markdownPreview h3 {
+.markdownPreview h1 {
+  font-size: 1.8em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-color);
   margin-top: 24px;
   margin-bottom: 16px;
+  font-weight: 600;
 }
 
-.markdownPreview > *:first-child {
-  margin-top: 0 !important;
+.markdownPreview h2 {
+  font-size: 1.4em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-color);
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.markdownPreview h3 {
+  font-size: 1.2em;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
 }
 
 .markdownPreview p {
+  margin-top: 0;
   margin-bottom: 16px;
 }
 
-.markdownPreview ul, .markdownPreview ol {
-  padding-left: 20px;
+.markdownPreview blockquote {
+  padding: 0 1em;
+  color: var(--text-sub);
+  border-left: 0.25em solid var(--border-color);
+  margin: 0 0 16px 0;
+}
+
+.markdownPreview code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: var(--bg-color);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+}
+
+.markdownPreview pre {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: var(--bg-color);
+  border-radius: 6px;
   margin-bottom: 16px;
+}
+
+.markdownPreview pre code {
+  padding: 0;
+  background-color: transparent;
+  font-size: 100%;
+}
+
+.markdownPreview ul, .markdownPreview ol {
+  padding-left: 2em;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.markdownPreview table {
+  border-spacing: 0;
+  border-collapse: collapse;
+  margin-top: 0;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.markdownPreview table th, .markdownPreview table td {
+  padding: 6px 13px;
+  border: 1px solid var(--border-color);
+}
+
+.markdownPreview table tr {
+  background-color: var(--surface-color);
+  border-top: 1px solid var(--border-color);
+}
+
+.markdownPreview table tr:nth-child(2n) {
+  background-color: var(--bg-color);
+}
+
+.markdownPreview img {
+  max-width: 100%;
+  box-sizing: content-box;
+}
+
+.markdownPreview hr {
+  height: 0.25em;
+  padding: 0;
+  margin: 24px 0;
+  background-color: var(--border-color);
+  border: 0;
 }

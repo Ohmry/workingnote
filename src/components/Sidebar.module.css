@@ -17,31 +17,14 @@
 .header {
   display: flex;
   align-items: center;
-  padding: var(--spacing-lg);
+  padding: 0 var(--spacing-lg);
   border-bottom: 1px solid var(--border-color);
   min-height: 64px;
 }
 
 .collapsed .header {
   justify-content: center;
-  padding: var(--spacing-md) 0;
-}
-
-.logoArea {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--primary-color);
-  white-space: nowrap;
-  letter-spacing: -0.5px;
-}
-
-[data-theme='dark'] .logoArea {
-  color: #818cf8; /* 밝은 Indigo 400 */
-  text-shadow: 0 0 10px rgba(129, 140, 248, 0.2);
-}
-
-.collapsed .logoArea {
-  display: none;
+  padding: 0;
 }
 
 .searchSection {
