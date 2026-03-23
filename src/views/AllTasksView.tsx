@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTaskStore } from '../store/useTaskStore';
 import Checkbox from '../components/Checkbox';
 import styles from './DailyFocusView.module.css';

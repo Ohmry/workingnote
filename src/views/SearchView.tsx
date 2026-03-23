@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTaskStore } from '../store/useTaskStore';
 import styles from './DailyFocusView.module.css';
-import searchStyles from './SearchView.module.css';
 import { Search as SearchIcon, FileText, CheckCircle, Lock } from 'lucide-react';
 
 interface SearchViewProps {

@@ -3,18 +3,14 @@ import {
   Calendar, 
   Trash2, 
   Settings, 
-  Folder, 
-  Tag as TagIcon,
   Layout,
   ListTodo,
   PanelLeftClose,
   PanelLeftOpen,
-  Plus,
   Search,
   Lock
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
-import { useTaskStore } from '../store/useTaskStore';
 
 import Logo from './Logo';
 
@@ -25,8 +21,6 @@ interface SidebarProps {
   onViewChange: (view: ViewType) => void;
   isCollapsed: boolean;
   onToggle: () => void;
-  activeFilter?: string;
-  onFilterChange: (type: ViewType, filterId: string) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
 }
@@ -36,8 +30,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   onViewChange, 
   isCollapsed, 
   onToggle,
-  activeFilter,
-  onFilterChange,
   searchQuery,
   onSearchChange
 }) => {

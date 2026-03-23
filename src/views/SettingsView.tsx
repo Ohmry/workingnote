@@ -11,7 +11,6 @@ import {
   LayoutTemplate, 
   Database,
   Info,
-  ChevronRight,
   ShieldCheck
 } from 'lucide-react';
 

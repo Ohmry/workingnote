@@ -86,12 +86,6 @@ function App() {
     if (view !== 'search') setSearchQuery('');
   };
 
-  const handleFilterChange = (type: ViewType, id: string) => {
-    setActiveView(type);
-    setFilterId(id);
-    setSearchQuery('');
-  };
-
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
     setActiveView('today');
@@ -168,8 +162,6 @@ function App() {
         onViewChange={handleViewChange} 
         isCollapsed={isSidebarCollapsed}
         onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        activeFilter={filterId}
-        onFilterChange={handleFilterChange}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
       />

@@ -35,7 +35,7 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
   const [localTaskDesc, setLocalTaskDesc] = useState('');
 
   const [filterStatus, setFilterStatus] = useState<'all' | 'todo' | 'done'>('all');
-  const [sortBy, setSortBy] = useState<'order' | 'status' | 'title'>('order');
+  const [sortBy] = useState<'order' | 'status' | 'title'>('order');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const containerRef = useRef<HTMLDivElement>(null);
 

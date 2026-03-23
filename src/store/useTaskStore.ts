@@ -162,7 +162,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       status: 'todo',
       priority: 'medium',
       order: get().tasks.length > 0 ? Math.max(...get().tasks.map(t => t.order)) + 1 : 0,
-      dueDate: dueDate || null,
+      dueDate: dueDate || undefined,
       tags: [],
       subTasks: [],
       isDeleted: false,
