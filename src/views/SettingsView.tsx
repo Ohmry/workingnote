@@ -16,7 +16,7 @@ import {
 
 const SettingsView: React.FC = () => {
   const { config, updateConfig, vaultPassword } = useTaskStore();
-  const version = "0.1.0"; // Manually or via getVersion from tauri-apps/api/app
+  const version = "0.2.0"; // Updated for release 0.2.0
 
   const handleOpenFolder = async () => {
     try {
