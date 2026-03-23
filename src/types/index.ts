@@ -61,10 +61,21 @@ export interface Tag {
   color?: string;
 }
 
+export interface SecureNote {
+  id: string;
+  title: string;
+  content: string;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppData {
   version: number;
   tasks: Task[];
   notes: DailyNote[];
   categories: Category[];
   tags: Tag[];
+  secureNotes: SecureNote[];
+  vaultPassword?: string; // Hashed password could be better, but we'll start with simple comparison
 }

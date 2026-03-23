@@ -10,14 +10,15 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
-  Search
+  Search,
+  Lock
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 import { useTaskStore } from '../store/useTaskStore';
 
 import Logo from './Logo';
 
-export type ViewType = 'today' | 'all' | 'calendar' | 'trash' | 'settings' | 'category' | 'tag' | 'search';
+export type ViewType = 'today' | 'all' | 'calendar' | 'trash' | 'settings' | 'category' | 'tag' | 'search' | 'vault';
 
 interface SidebarProps {
   activeView: ViewType;
@@ -93,6 +94,14 @@ const Sidebar: React.FC<SidebarProps> = ({
         >
           <Calendar className={styles.icon} />
           <span className={styles.menuText}>캘린더</span>
+        </div>
+        <div 
+          className={`${styles.menuItem} ${activeView === 'vault' ? styles.active : ''}`}
+          onClick={() => onViewChange('vault')}
+          title="보관함"
+        >
+          <Lock className={styles.icon} />
+          <span className={styles.menuText}>보관함</span>
         </div>
         <div 
           className={`${styles.menuItem} ${activeView === 'trash' ? styles.active : ''}`}

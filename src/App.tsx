@@ -5,6 +5,7 @@ import CalendarView from './views/CalendarView';
 import TrashView from './views/TrashView';
 import SettingsView from './views/SettingsView';
 import SearchView from './views/SearchView';
+import SecureNotesView from './views/SecureNotesView';
 import Sidebar, { ViewType } from './components/Sidebar';
 import Toast from './components/Toast';
 import { useTaskStore } from './store/useTaskStore';
@@ -105,10 +106,13 @@ function App() {
     }
   };
 
-  const handleSearchResultClick = (type: 'task' | 'note', id: string) => {
+  const handleSearchResultClick = (type: 'task' | 'note' | 'vault', id: string) => {
     if (type === 'note') {
       setSelectedDate(id);
       setActiveView('today');
+    } else if (type === 'vault') {
+      setActiveView('vault');
+      // noteId selection logic can be added to SecureNotesView via a global state if needed
     } else {
       const task = useTaskStore.getState().tasks.find(t => t.id === id);
       if (task?.dueDate) {
@@ -133,6 +137,8 @@ function App() {
         return <SearchView query={searchQuery} onResultClick={handleSearchResultClick} />;
       case 'calendar':
         return <CalendarView onDateSelect={handleDateSelect} />;
+      case 'vault':
+        return <SecureNotesView />;
       case 'trash':
         return <TrashView />;
       case 'settings':

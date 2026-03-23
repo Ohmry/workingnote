@@ -1,21 +1,21 @@
 import React from 'react';
 import { useTaskStore } from '../store/useTaskStore';
 import styles from './SearchView.module.css';
-import { Search as SearchIcon, FileText, CheckCircle } from 'lucide-react';
+import { Search as SearchIcon, FileText, CheckCircle, Lock } from 'lucide-react';
 
 interface SearchViewProps {
   query: string;
-  onResultClick: (type: 'task' | 'note', id: string) => void;
+  onResultClick: (type: 'task' | 'note' | 'vault', id: string) => void;
 }
 
 const SearchView: React.FC<SearchViewProps> = ({ query, onResultClick }) => {
-  const { tasks, notes } = useTaskStore();
+  const { tasks, notes, secureNotes } = useTaskStore();
 
   if (!query.trim()) {
     return (
       <div className={styles.emptyState}>
         <SearchIcon size={48} strokeWidth={1} style={{ marginBottom: '16px' }} />
-        <p>검색어를 입력하여 할 일과 일지를 찾아보세요.</p>
+        <p>검색어를 입력하여 할 일, 일지, 보관함을 찾아보세요.</p>
       </div>
     );
   }
@@ -35,7 +35,13 @@ const SearchView: React.FC<SearchViewProps> = ({ query, onResultClick }) => {
     n.content.toLowerCase().includes(searchLower)
   );
 
-  const totalResults = filteredTasks.length + filteredNotes.length;
+  // 보관함 검색 (제목만!)
+  const filteredSecureNotes = secureNotes.filter(sn => 
+    !sn.isDeleted && 
+    sn.title.toLowerCase().includes(searchLower)
+  );
+
+  const totalResults = filteredTasks.length + filteredNotes.length + filteredSecureNotes.length;
 
   return (
     <div className={styles.container}>
@@ -88,6 +94,27 @@ const SearchView: React.FC<SearchViewProps> = ({ query, onResultClick }) => {
                     </div>
                   </div>
                   <p className={styles.itemSnippet}>{note.content}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {filteredSecureNotes.length > 0 && (
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>보관함 ({filteredSecureNotes.length})</h2>
+              {filteredSecureNotes.map(note => (
+                <div 
+                  key={note.id} 
+                  className={styles.resultItem}
+                  onClick={() => onResultClick('vault', note.id)}
+                >
+                  <div className={styles.itemHeader}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Lock size={14} color="var(--primary-color)" />
+                      <span className={styles.itemTitle}>{note.title}</span>
+                    </div>
+                  </div>
+                  <p className={styles.itemSnippet} style={{ fontStyle: 'italic', opacity: 0.7 }}>보호된 콘텐츠 (비밀번호 필요)</p>
                 </div>
               ))}
             </div>
