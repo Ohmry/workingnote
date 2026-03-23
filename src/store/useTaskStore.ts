@@ -84,6 +84,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       const tagsRaw = await safeSelect('SELECT * FROM tags');
       const secureNotesRaw = await safeSelect('SELECT * FROM secure_notes');
       const configRaw = await safeSelect('SELECT * FROM config');
+      const taskTagsRaw = await safeSelect('SELECT * FROM task_tags');
 
       // Map config
       const themeConfig = configRaw.find(c => c.key === 'theme')?.value as any;
@@ -100,8 +101,10 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         ...t,
         order: t.task_order ?? 0,
         isDeleted: t.is_deleted === 1 || t.is_deleted === true,
-        subTasks: [],
-        tags: [] 
+        subTasks: [], // SQLite currently doesn't store subtasks in a separate table, maybe JSON in description?
+        tags: (taskTagsRaw || [])
+          .filter(tt => tt.task_id === t.id)
+          .map(tt => tt.tag_name)
       }));
 
       const notes: DailyNote[] = (notesRaw || []).map(n => ({
@@ -202,6 +205,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       if (updates.priority !== undefined) { setClauses.push('priority = ?'); values.push(updates.priority); }
       if (updates.order !== undefined) { setClauses.push('task_order = ?'); values.push(updates.order); }
       if (updates.dueDate !== undefined) { setClauses.push('due_date = ?'); values.push(updates.dueDate); }
+      if (updates.categoryId !== undefined) { setClauses.push('category_id = ?'); values.push(updates.categoryId); }
       if (updates.isDeleted !== undefined) { setClauses.push('is_deleted = ?'); values.push(updates.isDeleted ? 1 : 0); }
       if (updates.deletedAt !== undefined) { setClauses.push('deleted_at = ?'); values.push(updates.deletedAt); }
       
@@ -209,6 +213,14 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       values.push(id);
 
       await db.execute(`UPDATE tasks SET ${setClauses.join(', ')} WHERE id = ?`, values);
+
+      // Handle tags update
+      if (updates.tags !== undefined) {
+        await db.execute('DELETE FROM task_tags WHERE task_id = ?', [id]);
+        for (const tagName of updates.tags) {
+          await db.execute('INSERT OR IGNORE INTO task_tags (task_id, tag_name) VALUES (?, ?)', [id, tagName]);
+        }
+      }
     }
 
     set((state) => ({

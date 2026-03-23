@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "workingnote",
-  "version": "0.1.0",
-  "identifier": "com.leebyunghoon.workingnote",
+  "productName": "Working Note",
+  "version": "0.2.0",
+  "identifier": "workingnote",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "workingnote",
+        "title": "Working Note",
         "width": 800,
         "height": 600
       }

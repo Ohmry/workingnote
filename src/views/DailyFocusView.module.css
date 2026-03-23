@@ -4,23 +4,23 @@
   background-color: var(--bg-color);
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 16px 20px;
 }
 
 .header {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   flex-shrink: 0;
 }
 
 .title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   color: var(--text-main);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-sub);
 }
 
@@ -40,31 +40,34 @@
 .horizontal {
   flex-direction: row;
   align-items: stretch;
-  gap: 0; /* Gap managed by divider */
+  gap: 20px; /* Space between cards */
 }
 
 .horizontal .taskListSection {
   height: 100% !important;
-  border-right: none;
 }
 
 .horizontal .divider {
-  width: 1px !important;
+  width: 4px !important;
   height: 100% !important;
   cursor: col-resize;
-  background-color: var(--border-color);
+  background-color: transparent;
+  margin: 0 -12px; /* Pull the interactive area closer to center of gap */
   z-index: 10;
+  transition: background-color 0.2s;
+  border-radius: 2px;
 }
 
 .horizontal .divider:hover {
   background-color: var(--primary-color);
-  width: 2px !important;
+  opacity: 0.3;
 }
 
 /* Vertical Layout */
 .vertical {
   flex-direction: column;
   align-items: stretch;
+  gap: 20px; /* Space between cards */
 }
 
 .vertical .taskListSection {
@@ -72,16 +75,19 @@
 }
 
 .vertical .divider {
-  height: 1px !important;
+  height: 4px !important;
   width: 100% !important;
   cursor: row-resize;
-  background-color: var(--border-color);
+  background-color: transparent;
+  margin: -12px 0;
   z-index: 10;
+  transition: background-color 0.2s;
+  border-radius: 2px;
 }
 
 .vertical .divider:hover {
   background-color: var(--primary-color);
-  height: 2px !important;
+  opacity: 0.3;
 }
 
 /* Sections Internal */
@@ -120,11 +126,11 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border: none;
   border-radius: 6px;
   background: none;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-sub);
   cursor: pointer;
@@ -160,6 +166,73 @@
   margin: 0;
   overflow-y: auto;
   flex: 1;
+}
+
+.emptyState {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-sub);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Vault Lock Screen */
+.lockScreenCard {
+  width: 100%;
+  max-width: 300px; /* Adjusted to 300px as requested */
+  padding: 48px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0 auto;
+}
+
+.lockIconContainer {
+  background-color: var(--surface-color);
+  width: 72px; /* Slightly smaller circle */
+  height: 72px;
+  border-radius: 50%;
+  margin-bottom: 24px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.primaryButton {
+  height: 40px; /* Slightly shorter button */
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0 24px;
+  font-size: 13px; /* Slightly smaller text */
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.primaryButton:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.primaryButton:active {
+  transform: translateY(0);
 }
 
 .taskItem {
@@ -257,11 +330,23 @@
 .backButton:hover { color: var(--primary-color); border-color: var(--primary-color); }
 .deleteButton:hover { color: var(--danger-color); border-color: var(--danger-color); }
 
-/* Markdown Styles (same as before) */
-.markdownPreview h1 { font-size: 1.8em; border-bottom: 1px solid var(--border-color); margin-top: 24px; margin-bottom: 16px; font-weight: 600; }
-.markdownPreview h2 { font-size: 1.4em; border-bottom: 1px solid var(--border-color); margin-top: 24px; margin-bottom: 16px; font-weight: 600; }
-.markdownPreview p { margin-bottom: 16px; }
+/* Markdown Styles */
+.markdownPreview h1 { 
+  font-size: 1.6em; 
+  border-bottom: 1px solid var(--border-color); 
+  margin-top: 16px; 
+  margin-bottom: 12px; 
+  font-weight: 700; 
+}
+.markdownPreview h2 { 
+  font-size: 1.3em; 
+  border-bottom: 1px solid var(--border-color); 
+  margin-top: 16px; 
+  margin-bottom: 10px; 
+  font-weight: 600; 
+}
+.markdownPreview p { margin-bottom: 12px; }
 .markdownPreview pre { position: relative; padding: 16px; background-color: var(--bg-color); border-radius: 6px; margin-bottom: 16px; }
 .markdownPreview pre:hover .copyButton { opacity: 1; }
-.copyButton { position: absolute; top: 8px; right: 8px; padding: 4px 8px; background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: 4px; font-size: 11px; opacity: 0; cursor: pointer; transition: all 0.2s; }
+.copyButton { position: absolute; top: 8px; right: 8px; padding: 4px 8px; background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; opacity: 0; cursor: pointer; transition: all 0.2s; }
 .copyButton:hover { background-color: var(--primary-color); color: white; }

@@ -52,29 +52,29 @@ const SecureNotesView: React.FC = () => {
 
   if (!vaultPassword || isVaultLocked) {
     return (
-      <div className={styles.container} style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <div className={styles.card} style={{ width: '100%', maxWidth: '400px', padding: '40px', alignItems: 'center', textAlign: 'center' }}>
-          <div style={{ backgroundColor: 'var(--bg-color)', padding: '20px', borderRadius: '50%', marginBottom: '24px' }}>
+      <div className={styles.container} style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-color)' }}>
+        <div className={styles.lockScreenCard}>
+          <div className={styles.lockIconContainer}>
             <Lock size={40} color="var(--primary-color)" />
           </div>
-          <h1 className={styles.title} style={{ fontSize: '24px' }}>
+          <h1 className={styles.title} style={{ fontSize: '24px', marginBottom: '8px' }}>
             {!vaultPassword ? '보관함 비밀번호 설정' : '보관함이 잠겨있습니다'}
           </h1>
           <p className={styles.subtitle} style={{ marginBottom: '32px' }}>
             {!vaultPassword ? '민감한 정보를 보호하기 위한 비밀번호를 설정하세요.' : '접근을 위해 비밀번호를 입력해주세요.'}
           </p>
           
-          <form onSubmit={!vaultPassword ? handleSetPassword : handleUnlock} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <form onSubmit={!vaultPassword ? handleSetPassword : handleUnlock} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
             {!vaultPassword ? (
               <>
-                <input type="password" className={styles.quickInput} placeholder="새 비밀번호" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoFocus />
-                <input type="password" className={styles.quickInput} placeholder="비밀번호 확인" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                <input type="password" className={styles.quickInput} placeholder="새 비밀번호 (4자 이상)" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoFocus style={{ height: '40px', width: '100%', boxSizing: 'border-box' }} />
+                <input type="password" className={styles.quickInput} placeholder="비밀번호 확인" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={{ height: '40px', width: '100%', boxSizing: 'border-box' }} />
               </>
             ) : (
-              <input type="password" className={styles.quickInput} placeholder="비밀번호 입력" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} autoFocus />
+              <input type="password" className={styles.quickInput} placeholder="비밀번호 입력" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} autoFocus style={{ height: '40px', width: '100%', boxSizing: 'border-box' }} />
             )}
-            {error && <p style={{ color: 'var(--danger-color)', fontSize: '12px', margin: '4px 0' }}>{error}</p>}
-            <button className={styles.toggleButton} style={{ height: '44px', justifyContent: 'center', marginTop: '8px' }}>
+            {error && <p style={{ color: 'var(--danger-color)', fontSize: '13px', margin: '4px 0', fontWeight: 600 }}>{error}</p>}
+            <button className={styles.primaryButton} style={{ marginTop: '12px', width: '100%' }}>
               {!vaultPassword ? '보관함 시작하기' : '잠금 해제'}
             </button>
           </form>

@@ -167,12 +167,16 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
                 </button>
               </div>
               <ul className={styles.taskList}>
-                {todayTasks.map(task => (
-                  <li key={task.id} className={styles.taskItem}>
-                    <Checkbox checked={task.status === 'done'} onChange={() => onToggleTask(task.id)} />
-                    <span className={styles.taskTitle} onClick={() => handleSelectTask(task.id)}>{task.title}</span>
-                  </li>
-                ))}
+                {todayTasks.length === 0 ? (
+                  <div className={styles.emptyState}>해당하는 업무가 없습니다.</div>
+                ) : (
+                  todayTasks.map(task => (
+                    <li key={task.id} className={styles.taskItem}>
+                      <Checkbox checked={task.status === 'done'} onChange={() => onToggleTask(task.id)} />
+                      <span className={styles.taskTitle} onClick={() => handleSelectTask(task.id)}>{task.title}</span>
+                    </li>
+                  ))
+                )}
               </ul>
             </>
           )}
