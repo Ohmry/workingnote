@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTaskStore } from '../store/useTaskStore';
-import styles from './SearchView.module.css';
+import styles from './DailyFocusView.module.css';
+import searchStyles from './SearchView.module.css';
 import { Search as SearchIcon, FileText, CheckCircle, Lock } from 'lucide-react';
 
 interface SearchViewProps {
@@ -13,114 +14,81 @@ const SearchView: React.FC<SearchViewProps> = ({ query, onResultClick }) => {
 
   if (!query.trim()) {
     return (
-      <div className={styles.emptyState}>
-        <SearchIcon size={48} strokeWidth={1} style={{ marginBottom: '16px' }} />
-        <p>검색어를 입력하여 할 일, 일지, 보관함을 찾아보세요.</p>
+      <div className={styles.container} style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', opacity: 0.5 }}>
+          <SearchIcon size={64} strokeWidth={1} style={{ marginBottom: '24px' }} />
+          <p style={{ fontSize: '16px' }}>검색어를 입력하여 업무와 일지를 찾아보세요.</p>
+        </div>
       </div>
     );
   }
 
   const searchLower = query.toLowerCase();
-
-  // 할 일 검색 (제목, 설명)
-  const filteredTasks = tasks.filter(t => 
-    !t.isDeleted && 
-    (t.title.toLowerCase().includes(searchLower) || 
-     t.description?.toLowerCase().includes(searchLower))
-  );
-
-  // 일지 검색 (내용)
-  const filteredNotes = notes.filter(n => 
-    !n.isDeleted && 
-    n.content.toLowerCase().includes(searchLower)
-  );
-
-  // 보관함 검색 (제목만!)
-  const filteredSecureNotes = secureNotes.filter(sn => 
-    !sn.isDeleted && 
-    sn.title.toLowerCase().includes(searchLower)
-  );
+  const filteredTasks = tasks.filter(t => !t.isDeleted && (t.title.toLowerCase().includes(searchLower) || t.description?.toLowerCase().includes(searchLower)));
+  const filteredNotes = notes.filter(n => !n.isDeleted && n.content.toLowerCase().includes(searchLower));
+  const filteredSecureNotes = secureNotes.filter(sn => !sn.isDeleted && sn.title.toLowerCase().includes(searchLower));
 
   const totalResults = filteredTasks.length + filteredNotes.length + filteredSecureNotes.length;
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>검색 결과</h1>
-      <p className={styles.summary}>"{query}"에 대한 검색 결과가 {totalResults}개 있습니다.</p>
+      <header className={styles.header}>
+        <h1 className={styles.title}>검색 결과</h1>
+        <p className={styles.subtitle}>"{query}"에 대한 {totalResults}개의 결과를 찾았습니다.</p>
+      </header>
 
-      {totalResults === 0 ? (
-        <div className={styles.emptyState}>
-          <p>검색 결과가 없습니다.</p>
-        </div>
-      ) : (
-        <>
-          {filteredTasks.length > 0 && (
-            <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>할 일 ({filteredTasks.length})</h2>
-              {filteredTasks.map(task => (
-                <div 
-                  key={task.id} 
-                  className={styles.resultItem}
-                  onClick={() => onResultClick('task', task.id)}
-                >
-                  <div className={styles.itemHeader}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className={styles.card} style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+        {totalResults === 0 ? (
+          <div style={{ padding: '40px', textAlign: 'center', opacity: 0.5 }}>검색 결과가 없습니다.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+            {filteredTasks.length > 0 && (
+              <div>
+                <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '12px' }}>할 일 ({filteredTasks.length})</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {filteredTasks.map(task => (
+                    <div key={task.id} className={styles.taskItem} onClick={() => onResultClick('task', task.id)}>
                       <CheckCircle size={14} color="var(--primary-color)" />
-                      <span className={styles.itemTitle}>{task.title}</span>
+                      <span className={styles.taskTitle}>{task.title}</span>
                     </div>
-                    <span className={styles.itemMeta}>{task.dueDate || '날짜 미지정'}</span>
-                  </div>
-                  {task.description && (
-                    <p className={styles.itemSnippet}>{task.description}</p>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            )}
 
-          {filteredNotes.length > 0 && (
-            <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>업무 일지 ({filteredNotes.length})</h2>
-              {filteredNotes.map(note => (
-                <div 
-                  key={note.date} 
-                  className={styles.resultItem}
-                  onClick={() => onResultClick('note', note.date)}
-                >
-                  <div className={styles.itemHeader}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <FileText size={14} color="var(--primary-color)" />
-                      <span className={styles.itemTitle}>{note.date} 업무일지</span>
+            {filteredNotes.length > 0 && (
+              <div>
+                <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '12px' }}>일지 ({filteredNotes.length})</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {filteredNotes.map(note => (
+                    <div key={note.date} className={styles.taskItem} style={{ flexDirection: 'column', alignItems: 'flex-start' }} onClick={() => onResultClick('note', note.date)}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FileText size={14} color="var(--primary-color)" />
+                        <span style={{ fontWeight: 700, fontSize: '14px' }}>{note.date} 일지</span>
+                      </div>
+                      <p style={{ fontSize: '13px', color: 'var(--text-sub)', margin: '4px 0 0 22px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{note.content}</p>
                     </div>
-                  </div>
-                  <p className={styles.itemSnippet}>{note.content}</p>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            )}
 
-          {filteredSecureNotes.length > 0 && (
-            <div className={styles.section}>
-              <h2 className={styles.sectionTitle}>보관함 ({filteredSecureNotes.length})</h2>
-              {filteredSecureNotes.map(note => (
-                <div 
-                  key={note.id} 
-                  className={styles.resultItem}
-                  onClick={() => onResultClick('vault', note.id)}
-                >
-                  <div className={styles.itemHeader}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {filteredSecureNotes.length > 0 && (
+              <div>
+                <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--primary-color)', marginBottom: '12px' }}>보관함 ({filteredSecureNotes.length})</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {filteredSecureNotes.map(note => (
+                    <div key={note.id} className={styles.taskItem} onClick={() => onResultClick('vault', note.id)}>
                       <Lock size={14} color="var(--primary-color)" />
-                      <span className={styles.itemTitle}>{note.title}</span>
+                      <span className={styles.taskTitle}>{note.title}</span>
                     </div>
-                  </div>
-                  <p className={styles.itemSnippet} style={{ fontStyle: 'italic', opacity: 0.7 }}>보호된 콘텐츠 (비밀번호 필요)</p>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

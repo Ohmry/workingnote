@@ -59,7 +59,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onDateSelect }) => {
           const isToday = isSameDay(day, new Date());
           const isCurrentMonth = isSameMonth(day, monthStart);
           const hasNote = notes.some(n => n.date === dayStr && !n.isDeleted);
-          const dayTasks = tasks.filter(t => t.dueDate === dayStr || (isToday && !t.dueDate));
+          const dayTasks = tasks.filter(t => !t.isDeleted && (t.dueDate === dayStr || (isToday && !t.dueDate && t.status !== 'done')));
+          const totalTasks = dayTasks.length;
+          const todoTasks = dayTasks.filter(t => t.status !== 'done').length;
 
           return (
             <div 
@@ -71,15 +73,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onDateSelect }) => {
               `}
               onClick={() => onDateSelect(dayStr)}
             >
-              <span className={styles.dayNumber}>{format(day, 'd')}</span>
-              <div className={styles.indicators}>
-                {hasNote && <StickyNote className={styles.noteIndicator} size={14} />}
-                {dayTasks.map(t => (
-                  <div 
-                    key={t.id} 
-                    className={`${styles.taskIndicator} ${t.status === 'done' ? styles.done : ''}`} 
-                  />
-                ))}
+              <div className={styles.dayTop}>
+                <span className={styles.dayNumber}>{format(day, 'd')}</span>
+                {hasNote && <StickyNote className={styles.noteIndicator} size={12} />}
+              </div>
+              
+              <div className={styles.taskCountContainer}>
+                {totalTasks > 0 && (
+                  <span className={`${styles.taskCountBadge} ${todoTasks === 0 ? styles.allDone : ''}`}>
+                    {todoTasks > 0 ? `업무 ${todoTasks}` : '완료'}
+                  </span>
+                )}
               </div>
             </div>
           );

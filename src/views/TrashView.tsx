@@ -1,52 +1,35 @@
+import React from 'react';
 import { useTaskStore } from '../store/useTaskStore';
-import styles from './TrashView.module.css';
-import { format } from 'date-fns';
+import styles from './DailyFocusView.module.css';
+import { Trash2, RotateCcw, XCircle } from 'lucide-react';
 
 const TrashView: React.FC = () => {
   const { tasks, restoreTask, permanentDeleteTask } = useTaskStore();
-  
   const deletedTasks = tasks.filter(t => t.isDeleted);
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
+      <header className={styles.header}>
         <h1 className={styles.title}>휴지통</h1>
-      </div>
+        <p className={styles.subtitle}>삭제된 업무들을 복구하거나 영구 삭제할 수 있습니다.</p>
+      </header>
 
-      <div className={styles.list}>
+      <div className={styles.card} style={{ flex: 1, padding: '8px' }}>
         {deletedTasks.length === 0 ? (
-          <div className={styles.emptyState}>
-            휴지통이 비어 있습니다.
-          </div>
+          <div style={{ padding: '40px', textAlign: 'center', opacity: 0.5 }}>휴지통이 비어있습니다.</div>
         ) : (
-          deletedTasks.map(task => (
-            <div key={task.id} className={styles.item}>
-              <div className={styles.itemInfo}>
-                <span className={styles.itemTitle}>{task.title}</span>
-                <span className={styles.itemMeta}>
-                  삭제일: {task.deletedAt ? format(new Date(task.deletedAt), 'yyyy-MM-dd HH:mm') : '알 수 없음'}
-                </span>
-              </div>
-              <div className={styles.actions}>
-                <button 
-                  className={`${styles.actionButton} ${styles.restore}`}
-                  onClick={() => restoreTask(task.id)}
-                >
-                  복원
-                </button>
-                <button 
-                  className={`${styles.actionButton} ${styles.delete}`}
-                  onClick={() => {
-                    if (confirm('영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-                      permanentDeleteTask(task.id);
-                    }
-                  }}
-                >
-                  영구 삭제
-                </button>
-              </div>
-            </div>
-          ))
+          <ul className={styles.taskList}>
+            {deletedTasks.map(task => (
+              <li key={task.id} className={styles.taskItem}>
+                <Trash2 size={16} color="var(--text-sub)" />
+                <span className={styles.taskTitle}>{task.title}</span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button className={styles.backButton} onClick={() => restoreTask(task.id)} title="복구"><RotateCcw size={14} /></button>
+                  <button className={styles.deleteButton} onClick={() => { if(confirm('영구 삭제하시겠습니까?')) permanentDeleteTask(task.id); }} title="영구 삭제"><XCircle size={14} /></button>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>

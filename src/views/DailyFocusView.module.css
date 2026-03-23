@@ -1,206 +1,179 @@
 .container {
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-color);
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background-color: var(--bg-color);
-  overflow: hidden;
+  padding: 24px;
 }
 
-/* Horizontal (Landscape) Layout Style */
+.header {
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+/* Base Card & Section */
+.card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Critical for scrolling children */
+}
+
+/* Horizontal Layout */
 .horizontal {
   flex-direction: row;
   align-items: stretch;
+  gap: 0; /* Gap managed by divider */
 }
 
 .horizontal .taskListSection {
-  max-width: 80%;
-  min-width: 250px;
   height: 100% !important;
-  border-right: 1px solid var(--border-color);
-  margin-bottom: 0;
+  border-right: none;
 }
 
 .horizontal .divider {
   width: 1px !important;
   height: 100% !important;
-  cursor: col-resize !important;
+  cursor: col-resize;
+  background-color: var(--border-color);
+  z-index: 10;
 }
 
-.horizontal .divider::after {
-  top: 0;
-  bottom: 0;
-  left: -6px;
-  right: -6px;
+.horizontal .divider:hover {
+  background-color: var(--primary-color);
+  width: 2px !important;
 }
 
-.horizontal .noteSection {
-  flex: 1;
-  height: 100%;
+/* Vertical Layout */
+.vertical {
+  flex-direction: column;
+  align-items: stretch;
 }
 
-/* Base section styles */
+.vertical .taskListSection {
+  width: 100% !important;
+}
+
+.vertical .divider {
+  height: 1px !important;
+  width: 100% !important;
+  cursor: row-resize;
+  background-color: var(--border-color);
+  z-index: 10;
+}
+
+.vertical .divider:hover {
+  background-color: var(--primary-color);
+  height: 2px !important;
+}
+
+/* Sections Internal */
 .taskListSection {
-  flex: 0 0 auto;
-  min-height: 100px;
-  padding: var(--spacing-xl);
-  overflow-y: auto;
-  background-color: var(--surface-color);
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-}
-
-.divider {
-  height: 1px;
-  background-color: var(--border-color);
-  cursor: row-resize;
-  transition: background-color 0.2s;
-  flex-shrink: 0;
-  position: relative;
-}
-
-.divider::after {
-  content: '';
-  position: absolute;
-  top: -4px;
-  bottom: -4px;
-  left: 0;
-  right: 0;
-}
-
-.divider:hover {
-  background-color: var(--primary-color);
+  background-color: var(--surface-color);
 }
 
 .noteSection {
-  flex: 1 1 auto;
-  padding: var(--spacing-xl);
-  overflow-y: auto;
-  background-color: var(--surface-color);
+  flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
-.noteHeader {
+.controlsRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-lg);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
-.headerRow {
+.segmentedControl {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-xl);
+  background-color: var(--bg-color);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
 }
 
-.title {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0;
-  color: var(--text-main);
-}
-
-.todayButton {
+.segmentedControl button {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  background-color: transparent;
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color);
-  border-radius: var(--radius-md);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.todayButton:hover {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-[data-theme='dark'] .todayButton {
-  color: #818cf8;
-  border-color: #818cf8;
-}
-
-[data-theme='dark'] .todayButton:hover {
-  background-color: #818cf8;
-  color: #ffffff;
-}
-
-.toggleButton {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background-color: var(--primary-color);
-  color: white;
+  padding: 4px 10px;
   border: none;
-  border-radius: var(--radius-md);
-  font-size: 12px;
+  border-radius: 6px;
+  background: none;
+  font-size: 11px;
   font-weight: 600;
+  color: var(--text-sub);
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.toggleButton:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
-}
-
-.toggleButton:active {
-  transform: translateY(0);
+.activeSegment {
+  background-color: var(--surface-color) !important;
+  color: var(--primary-color) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .inputGroup {
-  margin-bottom: var(--spacing-lg);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .quickInput {
   width: 100%;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: 10px 14px;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 13px;
   outline: none;
   background-color: var(--bg-color);
   color: var(--text-main);
 }
 
-.quickInput:focus {
-  border-color: var(--primary-color);
-  background-color: var(--surface-color);
-}
-
 .taskList {
   list-style: none;
-  padding: 0;
+  padding: 4px;
   margin: 0;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .taskItem {
   display: flex;
   align-items: center;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--border-color);
-  gap: var(--spacing-md);
-  transition: all 0.2s ease;
+  padding: 10px 12px;
+  gap: 10px;
+  border-radius: 8px;
+  transition: all 0.2s;
   cursor: pointer;
-  border-radius: var(--radius-md);
-  margin-bottom: 2px;
 }
 
 .taskItem:hover {
   background-color: var(--bg-color);
-}
-
-[data-theme='dark'] .taskItem:hover {
-  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .taskItem.done {
@@ -208,219 +181,87 @@
 }
 
 .taskItem.done .taskTitle {
+  color: var(--text-sub);
   text-decoration: line-through;
 }
 
-.checkbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
 .taskTitle {
-  flex: 1;
-  font-size: 14px;
-}
-
-.taskTitle:hover {
-  color: var(--primary-color);
-}
-
-/* Detail View Styles */
-.detailContainer {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.detailHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
-}
-
-.backButton, .deleteButton {
-  background: none;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-sub);
-  transition: all 0.2s;
-}
-
-.backButton:hover {
-  background-color: var(--secondary-color);
-  color: var(--primary-color);
-}
-
-.deleteButton:hover {
-  background-color: #fee2e2;
-  color: var(--danger-color);
-}
-
-.detailTitleInput {
-  flex: 1;
-  font-size: 18px;
-  font-weight: 700;
-  border: none;
-  border-bottom: 2px solid transparent;
-  outline: none;
-  padding: 4px 0;
+  font-size: 13px;
   color: var(--text-main);
-  background: transparent;
-}
-
-.detailTitleInput:focus {
-  border-bottom-color: var(--primary-color);
-}
-
-.taskDescriptionEditor {
-  width: 100%;
   flex: 1;
-  border: none;
-  outline: none;
-  font-size: 14px;
-  line-height: 1.6;
-  resize: none;
-  font-family: inherit;
-  color: var(--text-main);
-  background: transparent;
+  transition: color 0.2s;
 }
 
-.emptyState {
-  color: var(--text-sub);
-  font-size: 14px;
-  text-align: center;
-  padding: var(--spacing-xl) 0;
+.noteHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .markdownEditor {
-  width: 100%;
-  flex: 1;
   border: none;
   outline: none;
-  font-size: 14px;
-  line-height: 1.6;
   resize: none;
-  font-family: inherit;
-  color: var(--text-main);
   background: transparent;
+  font-family: inherit;
 }
 
-.markdownPreview {
+.markdownEditor:focus {
+  outline: none;
+}
+
+.markdownEditor, .markdownPreview {
   width: 100%;
   flex: 1;
   font-size: 14px;
   line-height: 1.6;
   color: var(--text-main);
   overflow-y: auto;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  padding: 24px 32px;
+  min-height: 0;
 }
 
-.markdownPreview h1 {
-  font-size: 1.8em;
-  padding-bottom: 0.3em;
+/* Detail View Styles */
+.detailHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-color);
-  margin-top: 24px;
-  margin-bottom: 16px;
-  font-weight: 600;
+  flex-shrink: 0;
 }
 
-.markdownPreview h2 {
-  font-size: 1.4em;
-  padding-bottom: 0.3em;
-  border-bottom: 1px solid var(--border-color);
-  margin-top: 24px;
-  margin-bottom: 16px;
-  font-weight: 600;
+.detailTitleInput {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text-main);
 }
 
-.markdownPreview h3 {
-  font-size: 1.2em;
-  margin-top: 24px;
-  margin-bottom: 16px;
-  font-weight: 600;
-}
-
-.markdownPreview p {
-  margin-top: 0;
-  margin-bottom: 16px;
-}
-
-.markdownPreview blockquote {
-  padding: 0 1em;
-  color: var(--text-sub);
-  border-left: 0.25em solid var(--border-color);
-  margin: 0 0 16px 0;
-}
-
-.markdownPreview code {
-  padding: 0.2em 0.4em;
-  margin: 0;
-  font-size: 85%;
-  background-color: var(--bg-color);
+.backButton, .deleteButton {
+  padding: 6px;
   border-radius: 6px;
-  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
-}
-
-.markdownPreview pre {
-  padding: 16px;
-  overflow: auto;
-  font-size: 85%;
-  line-height: 1.45;
-  background-color: var(--bg-color);
-  border-radius: 6px;
-  margin-bottom: 16px;
-}
-
-.markdownPreview pre code {
-  padding: 0;
-  background-color: transparent;
-  font-size: 100%;
-}
-
-.markdownPreview ul, .markdownPreview ol {
-  padding-left: 2em;
-  margin-top: 0;
-  margin-bottom: 16px;
-}
-
-.markdownPreview table {
-  border-spacing: 0;
-  border-collapse: collapse;
-  margin-top: 0;
-  margin-bottom: 16px;
-  width: 100%;
-}
-
-.markdownPreview table th, .markdownPreview table td {
-  padding: 6px 13px;
   border: 1px solid var(--border-color);
+  background: var(--bg-color);
+  cursor: pointer;
+  display: flex;
+  color: var(--text-sub);
 }
 
-.markdownPreview table tr {
-  background-color: var(--surface-color);
-  border-top: 1px solid var(--border-color);
-}
+.backButton:hover { color: var(--primary-color); border-color: var(--primary-color); }
+.deleteButton:hover { color: var(--danger-color); border-color: var(--danger-color); }
 
-.markdownPreview table tr:nth-child(2n) {
-  background-color: var(--bg-color);
-}
-
-.markdownPreview img {
-  max-width: 100%;
-  box-sizing: content-box;
-}
-
-.markdownPreview hr {
-  height: 0.25em;
-  padding: 0;
-  margin: 24px 0;
-  background-color: var(--border-color);
-  border: 0;
-}
+/* Markdown Styles (same as before) */
+.markdownPreview h1 { font-size: 1.8em; border-bottom: 1px solid var(--border-color); margin-top: 24px; margin-bottom: 16px; font-weight: 600; }
+.markdownPreview h2 { font-size: 1.4em; border-bottom: 1px solid var(--border-color); margin-top: 24px; margin-bottom: 16px; font-weight: 600; }
+.markdownPreview p { margin-bottom: 16px; }
+.markdownPreview pre { position: relative; padding: 16px; background-color: var(--bg-color); border-radius: 6px; margin-bottom: 16px; }
+.markdownPreview pre:hover .copyButton { opacity: 1; }
+.copyButton { position: absolute; top: 8px; right: 8px; padding: 4px 8px; background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: 4px; font-size: 11px; opacity: 0; cursor: pointer; transition: all 0.2s; }
+.copyButton:hover { background-color: var(--primary-color); color: white; }
