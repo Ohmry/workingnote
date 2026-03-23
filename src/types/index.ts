@@ -6,9 +6,11 @@ export interface AppConfig {
   version: number;
   storagePath: string;
   theme: Theme;
-  language: 'ko' | 'en';
-  lastBackupAt: string;
+  language: string;
+  lastBackupAt?: string;
+  dailyNoteLayout?: 'horizontal' | 'vertical';
 }
+
 
 export interface SubTask {
   id: string;

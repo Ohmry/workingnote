@@ -27,9 +27,9 @@ const AllTasksView: React.FC<AllTasksViewProps> = ({ viewType, filterId, onToggl
 
   const selectedTask = tasks.find(t => t.id === selectedTaskId);
 
-  const handleAddTask = (e: React.KeyboardEvent) => {
+  const handleAddTask = async (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && taskInput.trim()) {
-      addTask(taskInput.trim());
+      await addTask(taskInput.trim());
       setTaskInput('');
     }
   };

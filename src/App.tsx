@@ -27,15 +27,24 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
+    const init = async () => {
+      try {
+        await loadData();
+      } catch (err) {
+        console.error('App: Initialization failed', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    init();
   }, [loadData]);
 
   // 테마 적용 로직
   useEffect(() => {
     const root = window.document.documentElement;
-    
     const applyTheme = (targetTheme: 'light' | 'dark' | 'system') => {
       let resolvedTheme = targetTheme;
       if (targetTheme === 'system') {
@@ -43,35 +52,27 @@ function App() {
       }
       root.setAttribute('data-theme', resolvedTheme);
     };
-
     applyTheme(theme);
-
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => applyTheme('system');
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
   }, [theme]);
 
   const showToast = (message: string, onUndo?: () => void) => {
     setToast({ message, onUndo });
   };
 
-  const handleToggleTask = (id: string) => {
+  const handleToggleTask = async (id: string) => {
     const task = useTaskStore.getState().tasks.find(t => t.id === id);
     if (!task) return;
 
     const isCompleting = task.status !== 'done';
-    const originalOrder = task.order; // 기존 순서 기억
+    const originalOrder = task.order;
     
-    toggleTaskStatus(id);
+    await toggleTaskStatus(id);
 
     if (isCompleting) {
       showToast('항목을 완료했습니다.', () => {
-        // 실행 취소 시: 상태를 미완료로 돌리고 기존 순서 복구
-        toggleTaskStatus(id); 
-        useTaskStore.getState().updateTask(id, { order: originalOrder });
+        toggleTaskStatus(id).then(() => {
+          useTaskStore.getState().updateTask(id, { order: originalOrder });
+        });
       });
     }
   };
@@ -112,7 +113,6 @@ function App() {
       setActiveView('today');
     } else if (type === 'vault') {
       setActiveView('vault');
-      // noteId selection logic can be added to SecureNotesView via a global state if needed
     } else {
       const task = useTaskStore.getState().tasks.find(t => t.id === id);
       if (task?.dueDate) {
@@ -147,6 +147,19 @@ function App() {
         return <DailyFocusView date={selectedDate} onDateSelect={handleDateSelect} onToggleTask={handleToggleTask} />;
     }
   };
+
+  // If still loading and it's been more than 5 seconds, force render
+  if (isLoading) {
+    return (
+      <div style={{ 
+        height: '100vh', width: '100vw', display: 'flex', 
+        alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#f9fafb', color: '#111827'
+      }}>
+        <h2>데이터를 불러오는 중...</h2>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>

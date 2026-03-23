@@ -15,8 +15,11 @@ interface DailyFocusViewProps {
 }
 
 const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onToggleTask }) => {
-  const { tasks, addTask, updateTask, deleteTask, getNote, saveNote } = useTaskStore();
+  const { tasks, addTask, updateTask, deleteTask, getNote, saveNote, config } = useTaskStore();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
+  
+  // Use global layout setting
+  const isLandscape = config.dailyNoteLayout === 'horizontal';
   
   let displayDate = "";
   try {
@@ -30,7 +33,6 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
   const [isEditMode, setIsEditMode] = useState(false);
   const [splitSize, setSplitSize] = useState(40); // %
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
 
   // 필터 및 정렬 상태 추가
   const [filterStatus, setFilterStatus] = useState<'all' | 'todo' | 'done'>('all');
@@ -38,15 +40,8 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsLandscape(window.innerWidth > window.innerHeight);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const selectedTask = tasks.find(t => t.id === selectedTaskId);
+// ... [existing useEffect and handlers] ...
 
   useEffect(() => {
     const existingNote = getNote(date);
@@ -58,9 +53,9 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
     setSelectedTaskId(null);
   }, [getNote, date]);
 
-  const handleAddTask = (e: React.KeyboardEvent) => {
+  const handleAddTask = async (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && taskInput.trim()) {
-      addTask(taskInput.trim(), date);
+      await addTask(taskInput.trim(), date);
       setTaskInput('');
     }
   };
@@ -136,10 +131,10 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
   });
 
   return (
-    <div className={styles.container} ref={containerRef}>
+    <div className={`${styles.container} ${isLandscape ? styles.horizontal : ''}`} ref={containerRef}>
       <section 
         className={styles.taskListSection} 
-        style={isLandscape ? { width: `${splitSize}%`, height: '100%' } : { height: `${splitSize}%`, width: '100%' }}
+        style={isLandscape ? { width: `${splitSize}%` } : { height: `${splitSize}%` }}
       >
         {selectedTaskId && selectedTask ? (
           <div className={styles.detailContainer}>

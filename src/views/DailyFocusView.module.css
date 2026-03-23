@@ -6,63 +6,47 @@
   overflow: hidden;
 }
 
-/* Landscape Layout */
-@media (orientation: landscape) and (min-width: 768px) {
-  .container {
-    flex-direction: row;
-    align-items: stretch;
-  }
-
-  .taskListSection {
-    width: 40%;
-    max-width: 80%;
-    min-width: 250px;
-    height: 100% !important;
-    background-color: var(--surface-color);
-    border-right: 1px solid var(--border-color);
-    margin-bottom: 0;
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-  }
-
-  .divider {
-    width: 1px !important;
-    height: 100% !important;
-    cursor: col-resize !important;
-    background-color: var(--border-color);
-    flex-shrink: 0;
-    position: relative;
-  }
-
-  .divider::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: -6px;
-    right: -6px;
-    background-color: transparent;
-  }
-
-  .divider:hover {
-    width: 1px !important;
-    background-color: var(--primary-color);
-  }
-
-  .noteSection {
-    flex: 1;
-    height: 100%;
-    background-color: var(--surface-color);
-  }
+/* Horizontal (Landscape) Layout Style */
+.horizontal {
+  flex-direction: row;
+  align-items: stretch;
 }
 
+.horizontal .taskListSection {
+  max-width: 80%;
+  min-width: 250px;
+  height: 100% !important;
+  border-right: 1px solid var(--border-color);
+  margin-bottom: 0;
+}
+
+.horizontal .divider {
+  width: 1px !important;
+  height: 100% !important;
+  cursor: col-resize !important;
+}
+
+.horizontal .divider::after {
+  top: 0;
+  bottom: 0;
+  left: -6px;
+  right: -6px;
+}
+
+.horizontal .noteSection {
+  flex: 1;
+  height: 100%;
+}
+
+/* Base section styles */
 .taskListSection {
   flex: 0 0 auto;
   min-height: 100px;
   padding: var(--spacing-xl);
   overflow-y: auto;
   background-color: var(--surface-color);
+  display: flex;
+  flex-direction: column;
 }
 
 .divider {

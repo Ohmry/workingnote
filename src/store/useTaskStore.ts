@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { invoke } from '@tauri-apps/api/core';
-import { Task, DailyNote, Category, Tag, Status, AppData, AppConfig } from '../types';
+import Database from '@tauri-apps/plugin-sql';
+import { Task, DailyNote, Category, Tag, Status, AppConfig, SecureNote } from '../types';
 
 interface TaskState {
   tasks: Task[];
@@ -12,39 +12,39 @@ interface TaskState {
   isVaultLocked: boolean;
   version: number;
   config: AppConfig;
+  db: Database | null;
   
   // Persistence
   loadData: () => Promise<void>;
-  syncWithBackend: () => Promise<void>;
   updateConfig: (updates: Partial<AppConfig>) => void;
   
   // Tasks
-  addTask: (title: string, dueDate?: string) => void;
-  updateTask: (id: string, updates: Partial<Task>) => void;
-  deleteTask: (id: string) => void;
-  restoreTask: (id: string) => void;
-  permanentDeleteTask: (id: string) => void;
-  toggleTaskStatus: (id: string) => void;
+  addTask: (title: string, dueDate?: string) => Promise<void>;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+  restoreTask: (id: string) => Promise<void>;
+  permanentDeleteTask: (id: string) => Promise<void>;
+  toggleTaskStatus: (id: string) => Promise<void>;
   
   // Notes
   getNote: (date: string) => DailyNote | undefined;
-  saveNote: (date: string, content: string) => void;
+  saveNote: (date: string, content: string) => Promise<void>;
 
   // Categories
-  addCategory: (name: string, color: string) => void;
-  deleteCategory: (id: string) => void;
+  addCategory: (name: string, color: string) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   
   // Tags
-  addTag: (name: string, color?: string) => void;
-  deleteTag: (name: string) => void;
+  addTag: (name: string, color?: string) => Promise<void>;
+  deleteTag: (name: string) => Promise<void>;
 
   // Secure Notes (Vault)
   unlockVault: (password: string) => boolean;
   lockVault: () => void;
-  setVaultPassword: (password: string) => void;
-  addSecureNote: (title: string) => void;
-  updateSecureNote: (id: string, updates: Partial<SecureNote>) => void;
-  deleteSecureNote: (id: string) => void;
+  setVaultPassword: (password: string) => Promise<void>;
+  addSecureNote: (title: string) => Promise<void>;
+  updateSecureNote: (id: string, updates: Partial<SecureNote>) => Promise<void>;
+  deleteSecureNote: (id: string) => Promise<void>;
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -53,6 +53,7 @@ const DEFAULT_CONFIG: AppConfig = {
   theme: 'system',
   language: 'ko',
   lastBackupAt: new Date().toISOString(),
+  dailyNoteLayout: 'horizontal',
 };
 
 export const useTaskStore = create<TaskState>((set, get) => ({
@@ -65,55 +66,253 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   isVaultLocked: true,
   version: 1,
   config: DEFAULT_CONFIG,
+  db: null,
 
   loadData: async () => {
     try {
-      const data = await invoke<AppData>('get_initial_data');
-      const actualPath = await invoke<string>('get_data_path_string');
-      
-      if (data && (data.version || data.tasks)) {
-        let tasks = data.tasks || [];
-        
-        // ... [skip test data generation part for now to be concise] ...
-        
-        set((state) => ({
-          tasks: tasks,
-          notes: data.notes || [],
-          categories: data.categories || [],
-          tags: data.tags || (tasks.length > 0 ? [{ name: 'test' }, { name: 'work' }, { name: 'personal' }] : []),
-          secureNotes: data.secureNotes || [],
-          vaultPassword: data.vaultPassword,
-          isVaultLocked: true, // Always start locked
-          version: data.version || state.version,
-          config: { ...state.config, storagePath: actualPath }
-        }));
-      } else {
-        set((state) => ({ config: { ...state.config, storagePath: actualPath } }));
+      const db = await Database.load('sqlite:workingnote.db');
+      set({ db });
+
+      const safeSelect = async (query: string) => {
+        try { return await db.select<any[]>(query); }
+        catch (e) { return []; }
+      };
+
+      const tasksRaw = await safeSelect('SELECT * FROM tasks');
+      const notesRaw = await safeSelect('SELECT * FROM daily_notes');
+      const categoriesRaw = await safeSelect('SELECT * FROM categories');
+      const tagsRaw = await safeSelect('SELECT * FROM tags');
+      const secureNotesRaw = await safeSelect('SELECT * FROM secure_notes');
+      const configRaw = await safeSelect('SELECT * FROM config');
+
+      // Map config
+      const themeConfig = configRaw.find(c => c.key === 'theme')?.value as any;
+      const layoutConfig = configRaw.find(c => c.key === 'daily_note_layout')?.value as any;
+      const vaultPassword = configRaw.find(c => c.key === 'vault_password')?.value;
+
+      const newConfig = { 
+        ...get().config, 
+        theme: themeConfig || get().config.theme,
+        dailyNoteLayout: layoutConfig || get().config.dailyNoteLayout 
+      };
+
+      const tasks: Task[] = (tasksRaw || []).map(t => ({
+        ...t,
+        order: t.task_order ?? 0,
+        isDeleted: t.is_deleted === 1 || t.is_deleted === true,
+        subTasks: [],
+        tags: [] 
+      }));
+
+      const notes: DailyNote[] = (notesRaw || []).map(n => ({
+        ...n,
+        isDeleted: n.is_deleted === 1 || n.is_deleted === true,
+        assets: [],
+      }));
+
+      const categories: Category[] = (categoriesRaw || []).map(c => ({
+        ...c,
+        order: c.category_order ?? 0,
+      }));
+
+      const secureNotes: SecureNote[] = (secureNotesRaw || []).map(sn => ({
+        ...sn,
+        isDeleted: sn.is_deleted === 1 || sn.is_deleted === true,
+      }));
+
+      set({
+        tasks,
+        notes,
+        categories,
+        tags: tagsRaw || [],
+        secureNotes,
+        vaultPassword,
+        config: newConfig
+      });
+
+    } catch (error) {
+      console.error('Failed to load data from SQLite:', error);
+      set({ tasks: [], notes: [], categories: [], tags: [], secureNotes: [] });
+    }
+  },
+
+  updateConfig: async (updates: Partial<AppConfig>) => {
+    const { db } = get();
+    const newConfig = { ...get().config, ...updates };
+    set({ config: newConfig });
+
+    if (db) {
+      try {
+        if (updates.theme) {
+          await db.execute('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', ['theme', updates.theme]);
+        }
+        if (updates.dailyNoteLayout) {
+          await db.execute('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', ['daily_note_layout', updates.dailyNoteLayout]);
+        }
+      } catch (err) {
+        console.error('Failed to save config to DB:', err);
       }
-    } catch (error) {
-      console.error('Failed to load data:', error);
     }
   },
 
-  syncWithBackend: async () => {
-    const state = get();
-    const data: AppData = {
-      version: state.version,
-      tasks: state.tasks,
-      notes: state.notes,
-      categories: state.categories,
-      tags: state.tags,
-      secureNotes: state.secureNotes,
-      vaultPassword: state.vaultPassword,
+  addTask: async (title: string, dueDate?: string) => {
+    const newTask: Task = {
+      id: crypto.randomUUID(),
+      title,
+      status: 'todo',
+      priority: 'medium',
+      order: get().tasks.length > 0 ? Math.max(...get().tasks.map(t => t.order)) + 1 : 0,
+      dueDate: dueDate || null,
+      tags: [],
+      subTasks: [],
+      isDeleted: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
-    try {
-      await invoke('save_data', { data });
-    } catch (error) {
-      console.error('Failed to save data:', error);
+
+    const { db } = get();
+    if (db) {
+      try {
+        await db.execute(
+          'INSERT INTO tasks (id, title, status, priority, task_order, due_date, is_deleted, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [newTask.id, newTask.title, newTask.status, newTask.priority, newTask.order, newTask.dueDate, 0, newTask.createdAt, newTask.updatedAt]
+        );
+      } catch (error) {
+        console.error('Database INSERT error:', error);
+      }
     }
+
+    set((state) => ({ tasks: [...state.tasks, newTask] }));
   },
 
-  // ... [keep other existing methods until toggleTaskStatus] ...
+  updateTask: async (id: string, updates: Partial<Task>) => {
+    const { db, tasks } = get();
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    const updatedTask = { ...task, ...updates, updatedAt: new Date().toISOString() };
+    
+    if (db) {
+      const setClauses: string[] = [];
+      const values: any[] = [];
+      
+      if (updates.title !== undefined) { setClauses.push('title = ?'); values.push(updates.title); }
+      if (updates.description !== undefined) { setClauses.push('description = ?'); values.push(updates.description); }
+      if (updates.status !== undefined) { setClauses.push('status = ?'); values.push(updates.status); }
+      if (updates.priority !== undefined) { setClauses.push('priority = ?'); values.push(updates.priority); }
+      if (updates.order !== undefined) { setClauses.push('task_order = ?'); values.push(updates.order); }
+      if (updates.dueDate !== undefined) { setClauses.push('due_date = ?'); values.push(updates.dueDate); }
+      if (updates.isDeleted !== undefined) { setClauses.push('is_deleted = ?'); values.push(updates.isDeleted ? 1 : 0); }
+      if (updates.deletedAt !== undefined) { setClauses.push('deleted_at = ?'); values.push(updates.deletedAt); }
+      
+      setClauses.push('updated_at = ?'); values.push(updatedTask.updatedAt);
+      values.push(id);
+
+      await db.execute(`UPDATE tasks SET ${setClauses.join(', ')} WHERE id = ?`, values);
+    }
+
+    set((state) => ({
+      tasks: state.tasks.map((t) => t.id === id ? updatedTask : t),
+    }));
+  },
+
+  deleteTask: async (id: string) => {
+    await get().updateTask(id, { isDeleted: true, deletedAt: new Date().toISOString() });
+  },
+
+  restoreTask: async (id: string) => {
+    await get().updateTask(id, { isDeleted: false, deletedAt: undefined });
+  },
+
+  permanentDeleteTask: async (id: string) => {
+    const { db } = get();
+    if (db) {
+      await db.execute('DELETE FROM tasks WHERE id = ?', [id]);
+    }
+    set((state) => ({
+      tasks: state.tasks.filter((task) => task.id !== id),
+    }));
+  },
+
+  toggleTaskStatus: async (id: string) => {
+    const task = get().tasks.find(t => t.id === id);
+    if (!task) return;
+    const newStatus: Status = task.status === 'done' ? 'todo' : 'done';
+    await get().updateTask(id, { status: newStatus });
+  },
+
+  getNote: (date: string) => {
+    return get().notes.find((n) => n.date === date);
+  },
+
+  saveNote: async (date: string, content: string) => {
+    const { db, notes } = get();
+    const existingNote = notes.find((n) => n.date === date);
+    const now = new Date().toISOString();
+    
+    if (db) {
+      if (existingNote) {
+        await db.execute('UPDATE daily_notes SET content = ?, last_saved_at = ? WHERE date = ?', [content, now, date]);
+      } else {
+        await db.execute('INSERT INTO daily_notes (date, content, last_saved_at) VALUES (?, ?, ?)', [date, content, now]);
+      }
+    }
+
+    set((state) => {
+      const idx = state.notes.findIndex((n) => n.date === date);
+      let newNotes = [...state.notes];
+      if (idx > -1) newNotes[idx] = { ...newNotes[idx], content, lastSavedAt: now };
+      else newNotes.push({ date, content, assets: [], isDeleted: false, lastSavedAt: now });
+      return { notes: newNotes };
+    });
+  },
+
+  addCategory: async (name: string, color: string) => {
+    const newCategory: Category = {
+      id: crypto.randomUUID(),
+      name,
+      color,
+      order: get().categories.length
+    };
+    const { db } = get();
+    if (db) {
+      await db.execute('INSERT INTO categories (id, name, color, category_order) VALUES (?, ?, ?, ?)', [newCategory.id, newCategory.name, newCategory.color, newCategory.order]);
+    }
+    set((state) => ({ categories: [...state.categories, newCategory] }));
+  },
+
+  deleteCategory: async (id: string) => {
+    const { db } = get();
+    if (db) {
+      await db.execute('DELETE FROM categories WHERE id = ?', [id]);
+      await db.execute('UPDATE tasks SET category_id = NULL WHERE category_id = ?', [id]);
+    }
+    set((state) => ({
+      categories: state.categories.filter(c => c.id !== id),
+      tasks: state.tasks.map(t => t.categoryId === id ? { ...t, categoryId: undefined } : t)
+    }));
+  },
+
+  addTag: async (name: string, color?: string) => {
+    if (get().tags.some(t => t.name === name)) return;
+    const newTag: Tag = { name, color };
+    const { db } = get();
+    if (db) {
+      await db.execute('INSERT INTO tags (name, color) VALUES (?, ?)', [name, color]);
+    }
+    set((state) => ({ tags: [...state.tags, newTag] }));
+  },
+
+  deleteTag: async (name: string) => {
+    const { db } = get();
+    if (db) {
+      await db.execute('DELETE FROM tags WHERE name = ?', [name]);
+    }
+    set((state) => ({
+      tags: state.tags.filter(t => t.name !== name),
+      tasks: state.tasks.map(t => ({ ...t, tags: t.tags.filter(tag => tag !== name) }))
+    }));
+  },
 
   unlockVault: (password: string) => {
     if (get().vaultPassword === password) {
@@ -127,12 +326,15 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set({ isVaultLocked: true });
   },
 
-  setVaultPassword: (password: string) => {
+  setVaultPassword: async (password: string) => {
+    const { db } = get();
+    if (db) {
+      await db.execute('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', ['vault_password', password]);
+    }
     set({ vaultPassword: password });
-    get().syncWithBackend();
   },
 
-  addSecureNote: (title: string) => {
+  addSecureNote: async (title: string) => {
     const newNote: SecureNote = {
       id: crypto.randomUUID(),
       title,
@@ -141,158 +343,44 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+    const { db } = get();
+    if (db) {
+      await db.execute('INSERT INTO secure_notes (id, title, content, is_deleted, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)', [newNote.id, newNote.title, newNote.content, 0, newNote.createdAt, newNote.updatedAt]);
+    }
     set((state) => ({ secureNotes: [...state.secureNotes, newNote] }));
-    get().syncWithBackend();
   },
 
-  updateSecureNote: (id: string, updates: Partial<SecureNote>) => {
+  updateSecureNote: async (id: string, updates: Partial<SecureNote>) => {
+    const { db, secureNotes } = get();
+    const note = secureNotes.find(n => n.id === id);
+    if (!note) return;
+
+    const updatedNote = { ...note, ...updates, updatedAt: new Date().toISOString() };
+    
+    if (db) {
+      const setClauses: string[] = [];
+      const values: any[] = [];
+      if (updates.title !== undefined) { setClauses.push('title = ?'); values.push(updates.title); }
+      if (updates.content !== undefined) { setClauses.push('content = ?'); values.push(updates.content); }
+      if (updates.isDeleted !== undefined) { setClauses.push('is_deleted = ?'); values.push(updates.isDeleted ? 1 : 0); }
+      setClauses.push('updated_at = ?'); values.push(updatedNote.updatedAt);
+      values.push(id);
+
+      await db.execute(`UPDATE secure_notes SET ${setClauses.join(', ')} WHERE id = ?`, values);
+    }
+
     set((state) => ({
-      secureNotes: state.secureNotes.map((note) =>
-        note.id === id ? { ...note, ...updates, updatedAt: new Date().toISOString() } : note
-      ),
+      secureNotes: state.secureNotes.map((n) => n.id === id ? updatedNote : n),
     }));
-    get().syncWithBackend();
   },
 
-  deleteSecureNote: (id: string) => {
+  deleteSecureNote: async (id: string) => {
+    const { db } = get();
+    if (db) {
+      await db.execute('DELETE FROM secure_notes WHERE id = ?', [id]);
+    }
     set((state) => ({
       secureNotes: state.secureNotes.filter((note) => note.id !== id),
     }));
-    get().syncWithBackend();
-  },
-
-  updateConfig: (updates: Partial<AppConfig>) => {
-    set((state) => ({ config: { ...state.config, ...updates } }));
-    get().syncWithBackend();
-  },
-
-  addTask: (title: string, dueDate?: string) => {
-    const newTask: Task = {
-      id: crypto.randomUUID(),
-      title,
-      status: 'todo',
-      priority: 'medium',
-      order: get().tasks.length > 0 ? Math.max(...get().tasks.map(t => t.order)) + 1 : 0,
-      dueDate,
-      tags: [],
-      subTasks: [],
-      isDeleted: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    set((state) => ({ tasks: [...state.tasks, newTask] }));
-    get().syncWithBackend();
-  },
-
-  updateTask: (id: string, updates: Partial<Task>) => {
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === id ? { ...task, ...updates, updatedAt: new Date().toISOString() } : task
-      ),
-    }));
-    get().syncWithBackend();
-  },
-
-  deleteTask: (id: string) => {
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === id ? { ...task, isDeleted: true, deletedAt: new Date().toISOString() } : task
-      ),
-    }));
-    get().syncWithBackend();
-  },
-
-  restoreTask: (id: string) => {
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === id ? { ...task, isDeleted: false, deletedAt: undefined } : task
-      ),
-    }));
-    get().syncWithBackend();
-  },
-
-  permanentDeleteTask: (id: string) => {
-    set((state) => ({
-      tasks: state.tasks.filter((task) => task.id !== id),
-    }));
-    get().syncWithBackend();
-  },
-
-  toggleTaskStatus: (id: string) => {
-    const task = get().tasks.find(t => t.id === id);
-    if (!task) return;
-
-    const newStatus: Status = task.status === 'done' ? 'todo' : 'done';
-    
-    get().updateTask(id, { status: newStatus });
-  },
-
-  getNote: (date: string) => {
-    return get().notes.find((n) => n.date === date);
-  },
-
-  saveNote: (date: string, content: string) => {
-    set((state) => {
-      const existingNoteIndex = state.notes.findIndex((n) => n.date === date);
-      const now = new Date().toISOString();
-      
-      let newNotes = [...state.notes];
-      if (existingNoteIndex > -1) {
-        newNotes[existingNoteIndex] = {
-          ...newNotes[existingNoteIndex],
-          content,
-          lastSavedAt: now,
-        };
-      } else {
-        newNotes.push({
-          date,
-          content,
-          assets: [],
-          isDeleted: false,
-          lastSavedAt: now,
-        });
-      }
-      return { notes: newNotes };
-    });
-    get().syncWithBackend();
-  },
-
-  addCategory: (name: string, color: string) => {
-    const newCategory: Category = {
-      id: crypto.randomUUID(),
-      name,
-      color,
-      order: get().categories.length
-    };
-    set((state) => ({ categories: [...state.categories, newCategory] }));
-    get().syncWithBackend();
-  },
-
-  deleteCategory: (id: string) => {
-    set((state) => ({
-      categories: state.categories.filter(c => c.id !== id),
-      // 해당 카테고리가 할당된 태스크들은 카테고리 해제
-      tasks: state.tasks.map(t => t.categoryId === id ? { ...t, categoryId: undefined } : t)
-    }));
-    get().syncWithBackend();
-  },
-
-  addTag: (name: string, color?: string) => {
-    if (get().tags.some(t => t.name === name)) return;
-    const newTag: Tag = { name, color };
-    set((state) => ({ tags: [...state.tags, newTag] }));
-    get().syncWithBackend();
-  },
-
-  deleteTag: (name: string) => {
-    set((state) => ({
-      tags: state.tags.filter(t => t.name !== name),
-      // 태스크들에서 해당 태그 제거
-      tasks: state.tasks.map(t => ({
-        ...t,
-        tags: t.tags.filter(tag => tag !== name)
-      }))
-    }));
-    get().syncWithBackend();
   },
 }));

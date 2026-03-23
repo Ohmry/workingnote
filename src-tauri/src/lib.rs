@@ -1,151 +1,103 @@
-use serde::{Deserialize, Serialize};
-use std::fs;
-use std::path::PathBuf;
 use tauri::Manager;
+use std::fs;
+use tauri_plugin_sql::{Migration, MigrationKind};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct SubTask {
-    pub id: String,
-    pub title: String,
-    pub is_done: bool,
-    pub order: f64,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Task {
-    pub id: String,
-    pub title: String,
-    pub description: Option<String>,
-    pub status: String,
-    pub priority: String,
-    pub order: f64,
-    pub due_date: Option<String>,
-    pub category_id: Option<String>,
-    pub tags: Vec<String>,
-    pub sub_tasks: Vec<SubTask>,
-    pub is_deleted: bool,
-    pub deleted_at: Option<String>,
-    pub created_at: String,
-    pub updated_at: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Asset {
-    pub original_name: String,
-    pub saved_path: String,
-    pub uploaded_at: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct DailyNote {
-    pub date: String,
-    pub content: String,
-    pub assets: Vec<Asset>,
-    pub is_deleted: bool,
-    pub deleted_at: Option<String>,
-    pub last_saved_at: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Category {
-    pub id: String,
-    pub name: String,
-    pub color: String,
-    pub order: f64,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct Tag {
-    pub name: String,
-    pub color: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct SecureNote {
-    pub id: String,
-    pub title: String,
-    pub content: String,
-    pub is_deleted: bool,
-    pub created_at: String,
-    pub updated_at: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct AppData {
-    pub version: u32,
-    pub tasks: Vec<Task>,
-    pub notes: Vec<DailyNote>,
-    pub categories: Vec<Category>,
-    pub tags: Vec<Tag>,
-    pub secure_notes: Option<Vec<SecureNote>>,
-    pub vault_password: Option<String>,
-}
-
-fn get_data_path(app_handle: &tauri::AppHandle) -> PathBuf {
+#[tauri::command]
+fn get_db_folder_path(app_handle: tauri::AppHandle) -> String {
     let mut path = app_handle.path().local_data_dir().expect("Failed to get local data dir");
     path.push("workingnote");
-    if !path.exists() {
-        let _ = fs::create_dir_all(&path);
-    }
-    path.push("data.json");
-    path
-}
-
-#[tauri::command]
-fn get_initial_data(app_handle: tauri::AppHandle) -> AppData {
-    let path = get_data_path(&app_handle);
-    if path.exists() {
-        let content = fs::read_to_string(path).unwrap_or_else(|_| "{}".to_string());
-        serde_json::from_str(&content).unwrap_or_else(|_| AppData {
-            version: 1,
-            tasks: Vec::new(),
-            notes: Vec::new(),
-            categories: Vec::new(),
-            tags: Vec::new(),
-            secure_notes: None,
-            vault_password: None,
-        })
-    } else {
-        AppData {
-            version: 1,
-            tasks: Vec::new(),
-            notes: Vec::new(),
-            categories: Vec::new(),
-            tags: Vec::new(),
-            secure_notes: None,
-            vault_password: None,
-        }
-    }
-}
-
-#[tauri::command]
-async fn save_data(app_handle: tauri::AppHandle, data: AppData) -> Result<(), String> {
-    let path = get_data_path(&app_handle);
-    let content = serde_json::to_string_pretty(&data).map_err(|e| e.to_string())?;
-    fs::write(path, content).map_err(|e| e.to_string())?;
-    Ok(())
+    path.to_string_lossy().to_string()
 }
 
 #[tauri::command]
 fn get_data_path_string(app_handle: tauri::AppHandle) -> String {
-    let path = get_data_path(&app_handle);
+    let mut path = app_handle.path().local_data_dir().expect("Failed to get local data dir");
+    path.push("workingnote");
+    path.push("workingnote.db");
     path.to_string_lossy().to_string()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let migrations = vec![
+        Migration {
+            version: 1,
+            description: "create initial tables",
+            sql: "
+                CREATE TABLE IF NOT EXISTS tasks (
+                    id TEXT PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    description TEXT,
+                    status TEXT NOT NULL,
+                    priority TEXT NOT NULL,
+                    task_order REAL NOT NULL,
+                    due_date TEXT,
+                    category_id TEXT,
+                    is_deleted BOOLEAN DEFAULT 0,
+                    deleted_at TEXT,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS daily_notes (
+                    date TEXT PRIMARY KEY,
+                    content TEXT NOT NULL,
+                    is_deleted BOOLEAN DEFAULT 0,
+                    deleted_at TEXT,
+                    last_saved_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS secure_notes (
+                    id TEXT PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    is_deleted BOOLEAN DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS tags (
+                    name TEXT PRIMARY KEY,
+                    color TEXT
+                );
+                CREATE TABLE IF NOT EXISTS task_tags (
+                    task_id TEXT NOT NULL,
+                    tag_name TEXT NOT NULL,
+                    PRIMARY KEY (task_id, tag_name),
+                    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+                    FOREIGN KEY (tag_name) REFERENCES tags(name) ON DELETE CASCADE
+                );
+                CREATE TABLE IF NOT EXISTS categories (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    color TEXT NOT NULL,
+                    category_order REAL NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS config (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                );
+            ",
+            kind: MigrationKind::Up,
+        }
+    ];
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![get_initial_data, save_data, get_data_path_string])
+        .plugin(
+            tauri_plugin_sql::Builder::default()
+                .add_migrations("sqlite:workingnote.db", migrations)
+                .build(),
+        )
+        .invoke_handler(tauri::generate_handler![get_data_path_string, get_db_folder_path])
+        .setup(|app| {
+            // Ensure directory exists
+            let path = app.path().local_data_dir().expect("Failed to get local data dir");
+            let mut app_path = path.clone();
+            app_path.push("workingnote");
+            if !app_path.exists() {
+                let _ = fs::create_dir_all(&app_path);
+            }
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
