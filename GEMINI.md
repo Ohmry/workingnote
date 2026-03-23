@@ -1,34 +1,34 @@
-# Working Note - Project Context & Guidelines
+# Working Note - Project Context & Guidelines (v0.2.0)
 
-이 파일은 'Working Note' 프로젝트의 구조, 기술 스택, 개발 컨벤션 및 주요 비즈니스 로직을 요약한 가이드입니다. 에이전트는 모든 작업 시 이 문서의 내용을 최우선으로 준수해야 합니다.
+이 파일은 'Working Note' 프로젝트의 최신 구조, 기술 스택, 개발 컨벤션 및 주요 비즈니스 로직을 요약한 마스터 가이드입니다. 에이전트는 모든 작업 시 이 문서의 내용을 최우선으로 준수해야 합니다.
 
 ## 🚀 프로젝트 개요
 - **목표**: 개인의 업무와 회고를 위한 미니멀리즘 데스크탑 앱
-- **핵심 가치**: 오프라인 우선(Local-first), 프라이버시, 경량화, 심리스한 UX
+- **핵심 가치**: 오프라인 우선(Local-first), 프라이버시(SQLite 기반), 경량화, 심리스한 UX
 
 ## 🛠 상세 기술 스택 (Tech Stack)
 
 ### Frontend
 - **Framework**: React 19 (TypeScript)
-- **State Management**: Zustand (with Persist middleware for local storage)
-- **Styling**: Vanilla CSS (using CSS Modules for scoping)
+- **State Management**: Zustand (SQLite 연동, `persist` 미들웨어 미사용)
+- **Styling**: Vanilla CSS (CSS Modules), 글로벌 변수(`variables.css`) 활용
 - **Icons**: Lucide React
-- **Editor/Markdown**: React-Markdown (with Remark GFM)
+- **Markdown**: React-Markdown, Remark GFM, Prism Code Highlighting
 - **Date Utilities**: date-fns
 
 ### Backend (Tauri / Rust)
 - **Runtime**: Tauri v2
 - **Language**: Rust
-- **Storage**: Initial (JSON via `tauri-plugin-fs`), Scalability (SQLite via `tauri-plugin-sql`)
-- **Desktop Features**: Native menus, System Tray, Shortcut registration
+- **Storage**: SQLite 전용 (`tauri-plugin-sql`)
+- **Desktop Features**: Native menus, System Tray, Shortcut registration, Window Title: 'Working Note'
 
 ---
 
 ## 💻 개발 환경 및 명령 (Commands)
 
+- **버전**: v0.2.0 (package.json, tauri.conf.json, Cargo.toml 동기화 필요)
 - **개발 모드 실행**: `npm run tauri dev`
 - **프로덕션 빌드**: `npm run tauri build`
-- **프론트엔드 단독 실행**: `npm run dev`
 - **타입 체크**: `npm run build` (tsc 포함)
 
 ---
@@ -38,16 +38,15 @@
 ```text
 /
 ├── src/                # Frontend (React)
-│   ├── components/     # Atomic UI components (Checkbox, Sidebar, Toast 등)
-│   ├── views/          # Screen-level components (DailyFocus, Calendar, AllTasks 등)
-│   ├── hooks/          # Business logic & data fetching
-│   ├── store/          # Zustand store definitions (useTaskStore.ts)
+│   ├── components/     # UI components (Checkbox, Sidebar, MarkdownRenderer 등)
+│   ├── views/          # Screen-level views (DailyFocus, AllTasks, SecureNotes 등)
+│   ├── store/          # Zustand store (useTaskStore.ts - SQLite 연동 로직 포함)
 │   ├── types/          # TypeScript definitions (index.ts)
-│   ├── styles/         # Global CSS & Design Tokens (variables.css)
+│   ├── styles/         # Global styles (variables.css)
 │   └── utils/          # Helpers (Date, Markdown, Storage)
 ├── src-tauri/          # Backend (Tauri/Rust)
-│   ├── src/            # Rust source code (main.rs, lib.rs)
-│   └── tauri.conf.json  # Tauri app configuration
+│   ├── src/            # Rust source (main.rs, lib.rs - SQLite migrations 포함)
+│   └── tauri.conf.json  # Tauri app configuration (Title: 'Working Note')
 └── docs/               # Documentation (Specs, Guides)
 ```
 
@@ -55,30 +54,30 @@
 
 ## 🚦 개발 워크플로우 및 규칙 (Conventions)
 
-### 1. 코딩 컨벤션
-- **Naming**: 컴포넌트는 PascalCase, 일반 파일/폴더는 kebab-case 권장.
-- **Type Safety**: 모든 데이터 모델은 `src/types/index.ts`에 정의하고 엄격하게 적용.
-- **Components**: UI 컴포넌트는 `.tsx` 파일과 `.module.css` 파일을 같은 폴더에 위치시켜 모듈화.
+### 1. 데이터 저장 및 상태 관리 (SQLite)
+- **Single Source of Truth**: 모든 데이터는 `workingnote.db` (SQLite)에 저장됩니다.
+- **Zustand & DB 동기화**: `useTaskStore.ts`의 액션 함수 내에서 `db.execute`를 통해 DB를 먼저 업데이트하고 상태를 반영합니다.
+- **Soft Delete**: 삭제 시 `isDeleted: 1` 및 `deletedAt` 기록.
+- **Relationships**: 태그 관계는 `task_tags` 테이블을 통해 관리합니다.
 
-### 2. 상태 관리 (Zustand)
-- 전역 상태는 `src/store/` 폴더 내에 정의.
-- `persist` 미들웨어를 사용하여 로컬 스토리지와 자동 동기화.
+### 2. UI/UX 및 레이아웃 원칙
+- **여백 및 간격**: 주요 카드 영역 사이에는 `gap: 20px`를 유지합니다. (DailyFocusView 참고)
+- **콤팩트 헤더**: 상단 타이틀 영역은 패딩을 최소화(`16px 20px`)하여 가용 화면을 확보합니다.
+- **마크다운 스타일**: 제목(`H1`, `H2`)의 상단 여백은 `16px` 정도로 조밀하게 유지합니다.
+- **Empty State**: 데이터가 없을 경우 `.emptyState` 클래스를 사용하여 중앙 정렬 및 넉넉한 여백(`40px`)을 제공합니다.
+- **Vault (보안)**: 보관함 잠금 화면은 `max-width: 300px` 내외로 콤팩트하게 구성하며, 배경 카드 없이 메인 배경에 직접 노출합니다.
 
-### 3. 데이터 영속화 및 비즈니스 로직
-- **Soft Delete**: 할 일 삭제 시 `isDeleted: true`와 `deletedAt` 기록 (휴지통 시스템).
-- **Auto Save**: 일지 작성 시 1초(Debounce) 내에 자동 저장 수행.
-- **Ordering**: 중간값(Mid-point) 알고리즘을 사용한 할 일 정렬 순서 관리.
-
-### 4. 에셋 관리
-- 이미지 등 에셋은 `assets/` 폴더에 `{date}_{uuid}_{original_name}` 형태로 저장.
-- 마크다운 내에서는 `asset://` 커스텀 프로토콜 사용 권장.
+### 3. 코딩 컨벤션
+- **Naming**: 컴포넌트 PascalCase, 일반 파일/폴더 kebab-case.
+- **Type Safety**: `src/types/index.ts` 정의 준수.
+- **Clean Code**: 미사용 파일(App.css 등) 및 임포트 즉시 정리.
 
 ---
 
 ## 📝 주요 문서 참조
-- `docs/FUNCTIONAL_SPEC.md`: 기능 상세 명세 (데이터 모델, API 리스트)
+- `docs/FUNCTIONAL_SPEC.md`: 기능 상세 명세 (데이터 모델 v2, API 리스트)
 - `docs/UI_SPEC.md`: UI/UX 디자인 명세
-- `src-tauri/tauri.conf.json`: 앱 설정 및 권한
+- `src-tauri/tauri.conf.json`: 앱 설정 및 버전(0.2.0)
 
 ---
-*Last Updated: 2026-03-22*
+*Last Updated: 2026-03-22 (v0.2.0 Upgrade)*
