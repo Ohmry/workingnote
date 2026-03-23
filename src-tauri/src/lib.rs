@@ -68,17 +68,30 @@ pub struct Tag {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct SecureNote {
+    pub id: String,
+    pub title: String,
+    pub content: String,
+    pub is_deleted: bool,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct AppData {
     pub version: u32,
     pub tasks: Vec<Task>,
     pub notes: Vec<DailyNote>,
     pub categories: Vec<Category>,
     pub tags: Vec<Tag>,
+    pub secure_notes: Option<Vec<SecureNote>>,
+    pub vault_password: Option<String>,
 }
 
 fn get_data_path(app_handle: &tauri::AppHandle) -> PathBuf {
-    let mut path = app_handle.path().document_dir().expect("Failed to get documents dir");
-    path.push(".workingnote");
+    let mut path = app_handle.path().local_data_dir().expect("Failed to get local data dir");
+    path.push("workingnote");
     if !path.exists() {
         let _ = fs::create_dir_all(&path);
     }
@@ -97,6 +110,8 @@ fn get_initial_data(app_handle: tauri::AppHandle) -> AppData {
             notes: Vec::new(),
             categories: Vec::new(),
             tags: Vec::new(),
+            secure_notes: None,
+            vault_password: None,
         })
     } else {
         AppData {
@@ -105,6 +120,8 @@ fn get_initial_data(app_handle: tauri::AppHandle) -> AppData {
             notes: Vec::new(),
             categories: Vec::new(),
             tags: Vec::new(),
+            secure_notes: None,
+            vault_password: None,
         }
     }
 }

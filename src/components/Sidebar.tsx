@@ -41,15 +41,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   searchQuery,
   onSearchChange
 }) => {
-  const { categories, tags, addCategory } = useTaskStore();
-
-  const handleAddCategory = () => {
-    const name = prompt('새 카테고리 이름을 입력하세요:');
-    if (name) {
-      addCategory(name, '#4f46e5');
-    }
-  };
-
   return (
     <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
       <div className={styles.header}>
@@ -111,37 +102,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           <Trash2 className={styles.icon} />
           <span className={styles.menuText}>휴지통</span>
         </div>
-
-        {!isCollapsed && (
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionTitle}>Categories</div>
-            <button className={styles.addBtn} onClick={handleAddCategory}><Plus size={14} /></button>
-          </div>
-        )}
-        {categories.map(category => (
-          <div 
-            key={category.id}
-            className={`${styles.menuItem} ${activeView === 'category' && activeFilter === category.id ? styles.active : ''}`}
-            onClick={() => onFilterChange('category', category.id)}
-            title={category.name}
-          >
-            <Folder className={styles.icon} style={{ color: category.color }} />
-            <span className={styles.menuText}>{category.name}</span>
-          </div>
-        ))}
-
-        {!isCollapsed && <div className={styles.sectionTitle}>Tags</div>}
-        {tags.map(tag => (
-          <div 
-            key={tag.name}
-            className={`${styles.menuItem} ${activeView === 'tag' && activeFilter === tag.name ? styles.active : ''}`}
-            onClick={() => onFilterChange('tag', tag.name)}
-            title={tag.name}
-          >
-            <TagIcon className={styles.icon} />
-            <span className={styles.menuText}>#{tag.name}</span>
-          </div>
-        ))}
       </nav>
 
       <div className={styles.bottomSection}>
