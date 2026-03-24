@@ -3,8 +3,8 @@ import { useTaskStore } from '../store/useTaskStore';
 import Checkbox from '../components/Checkbox';
 import styles from './DailyFocusView.module.css';
 import { ArrowLeft, Trash2, Edit2, Check, ArrowUpDown } from 'lucide-react';
-import { ask } from '@tauri-apps/plugin-dialog';
 import MarkdownRenderer from '../components/MarkdownRenderer';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 interface AllTasksViewProps {
   viewType: 'all' | 'category' | 'tag';
@@ -25,6 +25,7 @@ const AllTasksView: React.FC<AllTasksViewProps> = ({ viewType, filterId, onToggl
   const [filterStatus, setFilterStatus] = useState<'all' | 'todo' | 'done'>('all');
   const [sortBy, setSortBy] = useState<'order' | 'status' | 'title'>('order');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const selectedTask = tasks.find(t => t.id === selectedTaskId);
 
@@ -58,25 +59,17 @@ const AllTasksView: React.FC<AllTasksViewProps> = ({ viewType, filterId, onToggl
     setIsEditing(!isEditing);
   };
 
-  const handleDelete = async () => {
-    if (!selectedTaskId) return;
-    let confirmed = false;
-    try {
-      confirmed = await ask('이 항목을 삭제하시겠습니까?', {
-        title: '항목 삭제',
-        kind: 'warning',
-        okLabel: '삭제',
-        cancelLabel: '취소'
-      });
-    } catch (error) {
-      confirmed = window.confirm('이 항목을 삭제하시겠습니까?');
-    }
+  const handleDelete = () => {
+    setIsConfirmOpen(true);
+  };
 
-    if (confirmed) {
+  const handleConfirmDelete = () => {
+    if (selectedTaskId) {
       deleteTask(selectedTaskId);
       setSelectedTaskId(null);
       setIsEditing(false);
     }
+    setIsConfirmOpen(false);
   };
 
   const handleBack = async () => {
@@ -212,6 +205,15 @@ const AllTasksView: React.FC<AllTasksViewProps> = ({ viewType, filterId, onToggl
           </>
         )}
       </div>
+      <ConfirmDialog 
+        isOpen={isConfirmOpen}
+        title="항목 삭제"
+        message="이 항목을 삭제하시겠습니까?"
+        confirmLabel="삭제"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setIsConfirmOpen(false)}
+        isDanger={true}
+      />
     </div>
   );
 };

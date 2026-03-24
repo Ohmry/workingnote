@@ -1,11 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTaskStore } from '../store/useTaskStore';
 import styles from './DailyFocusView.module.css';
 import { Trash2, RotateCcw, XCircle } from 'lucide-react';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const TrashView: React.FC = () => {
   const { tasks, restoreTask, permanentDeleteTask } = useTaskStore();
   const deletedTasks = tasks.filter(t => t.isDeleted);
+
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+
+  const handleDeleteClick = (id: string) => {
+    setTaskToDelete(id);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (taskToDelete) {
+      permanentDeleteTask(taskToDelete);
+      setTaskToDelete(null);
+    }
+    setIsConfirmOpen(false);
+  };
 
   return (
     <div className={styles.container}>
@@ -25,13 +42,22 @@ const TrashView: React.FC = () => {
                 <span className={styles.taskTitle}>{task.title}</span>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button className={styles.backButton} onClick={() => restoreTask(task.id)} title="복구"><RotateCcw size={14} /></button>
-                  <button className={styles.deleteButton} onClick={() => { if(confirm('영구 삭제하시겠습니까?')) permanentDeleteTask(task.id); }} title="영구 삭제"><XCircle size={14} /></button>
+                  <button className={styles.deleteButton} onClick={() => handleDeleteClick(task.id)} title="영구 삭제"><XCircle size={14} /></button>
                 </div>
               </li>
             ))}
           </ul>
         )}
       </div>
+      <ConfirmDialog 
+        isOpen={isConfirmOpen}
+        title="영구 삭제"
+        message="영구 삭제하시겠습니까?"
+        confirmLabel="삭제"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setIsConfirmOpen(false)}
+        isDanger={true}
+      />
     </div>
   );
 };

@@ -1,0 +1,124 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: slideUp 0.2s ease-out;
+}
+
+.header {
+  padding: 24px 20px 8px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.iconContainer {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+}
+
+.iconContainer.danger {
+  background-color: #fee2e2;
+  color: var(--danger-color);
+}
+
+[data-theme='dark'] .iconContainer.danger {
+  background-color: #450a0a;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.body {
+  padding: 0 24px 24px 24px;
+  text-align: center;
+}
+
+.message {
+  font-size: 14px;
+  color: var(--text-sub);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.footer {
+  padding: 12px 16px;
+  background-color: var(--bg-color);
+  display: flex;
+  gap: 12px;
+}
+
+.cancelButton, .confirmButton {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border-color);
+}
+
+.cancelButton {
+  background-color: var(--surface-color);
+  color: var(--text-main);
+}
+
+.cancelButton:hover {
+  background-color: var(--border-color);
+}
+
+.confirmButton {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.confirmButton:hover {
+  filter: brightness(1.1);
+}
+
+.confirmButton.dangerButton {
+  background-color: var(--danger-color);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

@@ -4,6 +4,7 @@ import { ko } from 'date-fns/locale';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import { useTaskStore } from '../store/useTaskStore';
 import Checkbox from '../components/Checkbox';
+import ConfirmDialog from '../components/ConfirmDialog';
 import styles from './DailyFocusView.module.css';
 import { ArrowLeft, Trash2, Edit3, Eye, CalendarDays, ArrowUpDown } from 'lucide-react';
 
@@ -30,6 +31,7 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
   const [isEditMode, setIsEditMode] = useState(false);
   const [splitSize, setSplitSize] = useState(40); // %
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const [localTaskTitle, setLocalTaskTitle] = useState('');
   const [localTaskDesc, setLocalTaskDesc] = useState('');
@@ -66,6 +68,14 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
   const saveTaskChanges = async () => {
     if (selectedTaskId) {
       await updateTask(selectedTaskId, { title: localTaskTitle, description: localTaskDesc });
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedTaskId) {
+      await deleteTask(selectedTaskId);
+      setSelectedTaskId(null);
+      setIsConfirmOpen(false);
     }
   };
 
@@ -121,6 +131,15 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
 
   return (
     <div className={styles.container}>
+      <ConfirmDialog 
+        isOpen={isConfirmOpen}
+        title="항목 삭제"
+        message="정말로 이 항목을 삭제하시겠습니까?"
+        confirmLabel="삭제"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setIsConfirmOpen(false)}
+        isDanger={true}
+      />
       <header className={styles.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
@@ -147,7 +166,7 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
               <div className={styles.detailHeader}>
                 <button className={styles.backButton} onClick={() => { saveTaskChanges(); setSelectedTaskId(null); }}><ArrowLeft size={18} /></button>
                 <input className={styles.detailTitleInput} value={localTaskTitle} onChange={(e) => setLocalTaskTitle(e.target.value)} onBlur={saveTaskChanges} />
-                <button className={styles.deleteButton} onClick={() => { if(confirm('삭제할까요?')) { deleteTask(selectedTask.id); setSelectedTaskId(null); }}}><Trash2 size={18} /></button>
+                <button className={styles.deleteButton} onClick={() => setIsConfirmOpen(true)}><Trash2 size={18} /></button>
               </div>
               <textarea className={styles.markdownEditor} placeholder="상세 내용..." value={localTaskDesc} onChange={(e) => setLocalTaskDesc(e.target.value)} onBlur={saveTaskChanges} autoFocus />
             </>
@@ -205,3 +224,4 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
 };
 
 export default DailyFocusView;
+

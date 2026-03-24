@@ -3,6 +3,7 @@ import { useTaskStore } from '../store/useTaskStore';
 import styles from './DailyFocusView.module.css';
 import { Lock, Unlock, Plus, Trash2, Edit3, Eye, ShieldCheck, ChevronRight } from 'lucide-react';
 import MarkdownRenderer from '../components/MarkdownRenderer';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const SecureNotesView: React.FC = () => {
   const { 
@@ -22,9 +23,18 @@ const SecureNotesView: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [error, setError] = useState('');
 
   const currentNote = secureNotes.find(n => n.id === selectedNoteId);
+
+  const handleDeleteConfirm = () => {
+    if (selectedNoteId) {
+      deleteSecureNote(selectedNoteId);
+      setSelectedNoteId(null);
+    }
+    setIsConfirmOpen(false);
+  };
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +143,7 @@ const SecureNotesView: React.FC = () => {
                     <button className={!isEditMode ? styles.activeSegment : ''} onClick={() => setIsEditMode(false)}><Eye size={14} /></button>
                     <button className={isEditMode ? styles.activeSegment : ''} onClick={() => setIsEditMode(true)}><Edit3 size={14} /></button>
                   </div>
-                  <button className={styles.deleteButton} onClick={() => { if(confirm('영구 삭제하시겠습니까?')) { deleteSecureNote(currentNote.id); setSelectedNoteId(null); }}}><Trash2 size={16} /></button>
+                  <button className={styles.deleteButton} onClick={() => setIsConfirmOpen(true)}><Trash2 size={16} /></button>
                 </div>
               </div>
               {isEditMode ? (
@@ -150,6 +160,15 @@ const SecureNotesView: React.FC = () => {
           )}
         </section>
       </div>
+      <ConfirmDialog 
+        isOpen={isConfirmOpen}
+        title="영구 삭제"
+        message="영구 삭제하시겠습니까?"
+        confirmLabel="삭제"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setIsConfirmOpen(false)}
+        isDanger={true}
+      />
     </div>
   );
 };
