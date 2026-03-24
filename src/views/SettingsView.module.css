@@ -9,6 +9,8 @@
 
 .header {
   margin-bottom: 24px;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .title {
@@ -16,11 +18,15 @@
   font-weight: 800;
   color: var(--text-main);
   margin-bottom: 4px;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .subtitle {
   font-size: 13px;
   color: var(--text-sub);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .content {
@@ -45,6 +51,8 @@
   font-size: 15px;
   font-weight: 700;
   color: var(--text-main);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .card {
@@ -73,6 +81,8 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--text-main);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .settingDesc {

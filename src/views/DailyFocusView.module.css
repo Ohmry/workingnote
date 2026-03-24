@@ -295,6 +295,8 @@
   overflow-y: auto;
   padding: 24px 32px;
   min-height: 0;
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 /* Detail View Styles */

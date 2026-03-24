@@ -58,6 +58,18 @@ input, textarea, button {
   box-sizing: border-box;
 }
 
+/* Global text selection: Disabled by default */
+html, body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Allow selection in specific input/editor elements */
+input, textarea, [contenteditable="true"], .selectable-text {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
 /* Custom scrollbar for Dark Theme */
 [data-theme='dark'] ::-webkit-scrollbar {
   width: 10px;

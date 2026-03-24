@@ -11,11 +11,15 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-xl);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .title {
   font-size: 24px;
   font-weight: 700;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .list {
@@ -40,6 +44,8 @@
 .itemTitle {
   font-size: 14px;
   font-weight: 600;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .itemMeta {

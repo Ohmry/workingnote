@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import DailyFocusView from './views/DailyFocusView';
 import AllTasksView from './views/AllTasksView';
 import CalendarView from './views/CalendarView';
@@ -32,6 +33,13 @@ function App() {
   useEffect(() => {
     const init = async () => {
       try {
+        const dbPath = await invoke<string>('get_data_path_string');
+        const dbFolder = await invoke<string>('get_db_folder_path');
+        console.log('--- DATABASE PATH INFO ---');
+        console.log('DB File Path:', dbPath);
+        console.log('DB Folder Path:', dbFolder);
+        console.log('--------------------------');
+        
         await loadData();
       } catch (err) {
         console.error('App: Initialization failed', err);
