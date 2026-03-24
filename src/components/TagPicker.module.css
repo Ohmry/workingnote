@@ -1,0 +1,90 @@
+.tagPicker {
+  width: 100%;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.tagItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.tagItem:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.tagItem.selected {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.addTagBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px dashed var(--border-color);
+  background: none;
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.addTagBtn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.addTagInput {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 20px;
+  padding: 2px 8px;
+}
+
+.addTagInput input {
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 11px;
+  color: var(--text-main);
+  width: 70px;
+}
+
+.iconBtn {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  display: flex;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.iconBtn:hover {
+  background-color: var(--secondary-color);
+}

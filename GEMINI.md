@@ -1,4 +1,4 @@
-# Working Note - Project Context & Guidelines (v0.2.0)
+# Working Note - Project Context & Guidelines (v0.3.0)
 
 이 파일은 'Working Note' 프로젝트의 최신 구조, 기술 스택, 개발 컨벤션 및 주요 비즈니스 로직을 요약한 마스터 가이드입니다. 에이전트는 모든 작업 시 이 문서의 내용을 최우선으로 준수해야 합니다.
 
@@ -26,7 +26,7 @@
 
 ## 💻 개발 환경 및 명령 (Commands)
 
-- **버전**: v0.2.0 (package.json, tauri.conf.json, Cargo.toml 동기화 필요)
+- **버전**: v0.3.0 (package.json, tauri.conf.json, Cargo.toml 동기화 필요)
 - **개발 모드 실행**: `npm run tauri dev`
 - **프로덕션 빌드**: `npm run tauri build`
 - **타입 체크**: `npm run build` (tsc 포함)
@@ -77,7 +77,7 @@
 ## 📝 주요 문서 참조
 - `docs/FUNCTIONAL_SPEC.md`: 기능 상세 명세 (데이터 모델 v2, API 리스트)
 - `docs/UI_SPEC.md`: UI/UX 디자인 명세
-- `src-tauri/tauri.conf.json`: 앱 설정 및 버전(0.2.0)
+- `src-tauri/tauri.conf.json`: 앱 설정 및 버전(0.3.0)
 
 ---
-*Last Updated: 2026-03-22 (v0.2.0 Upgrade)*
+*Last Updated: 2026-03-24 (v0.3.0 Upgrade)*

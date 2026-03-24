@@ -59,7 +59,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ onDateSelect }) => {
           const isToday = isSameDay(day, new Date());
           const isCurrentMonth = isSameMonth(day, monthStart);
           const hasNote = notes.some(n => n.date === dayStr && !n.isDeleted);
-          const dayTasks = tasks.filter(t => !t.isDeleted && (t.dueDate === dayStr || (isToday && !t.dueDate && t.status !== 'done')));
+          const dayTasks = tasks.filter(t => !t.isDeleted && t.dueDate === dayStr);
           const totalTasks = dayTasks.length;
           const todoTasks = dayTasks.filter(t => t.status !== 'done').length;
 

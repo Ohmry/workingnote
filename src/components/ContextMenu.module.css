@@ -1,0 +1,70 @@
+.contextMenu {
+  position: fixed;
+  z-index: 10001;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.1s ease-out;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.menuItem:hover {
+  background-color: var(--bg-color);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  color: var(--text-sub);
+}
+
+.label {
+  flex: 1;
+}
+
+.danger {
+  color: var(--danger-color);
+}
+
+.danger .icon {
+  color: var(--danger-color);
+}
+
+.danger:hover {
+  background-color: #fee2e2;
+}
+
+[data-theme='dark'] .danger:hover {
+  background-color: #450a0a;
+}
+
+.customContent {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-color);
+  margin-top: 4px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}

@@ -19,7 +19,7 @@ interface TaskState {
   updateConfig: (updates: Partial<AppConfig>) => void;
   
   // Tasks
-  addTask: (title: string, dueDate?: string) => Promise<void>;
+  addTask: (title: string, dueDate?: string, tags?: string[]) => Promise<void>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   restoreTask: (id: string) => Promise<void>;
@@ -167,7 +167,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     }
   },
 
-  addTask: async (title: string, dueDate?: string) => {
+  addTask: async (title: string, dueDate?: string, tags: string[] = []) => {
     const newTask: Task = {
       id: crypto.randomUUID(),
       title,
@@ -175,7 +175,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       priority: 'medium',
       order: get().tasks.length > 0 ? Math.max(...get().tasks.map(t => t.order)) + 1 : 0,
       dueDate: dueDate || undefined,
-      tags: [],
+      tags: tags,
       subTasks: [],
       isDeleted: false,
       createdAt: new Date().toISOString(),
@@ -189,6 +189,11 @@ export const useTaskStore = create<TaskState>((set, get) => ({
           'INSERT INTO tasks (id, title, status, priority, task_order, due_date, is_deleted, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [newTask.id, newTask.title, newTask.status, newTask.priority, newTask.order, newTask.dueDate, 0, newTask.createdAt, newTask.updatedAt]
         );
+        
+        // Save tags
+        for (const tagName of tags) {
+          await db.execute('INSERT OR IGNORE INTO task_tags (task_id, tag_name) VALUES (?, ?)', [newTask.id, tagName]);
+        }
       } catch (error) {
         console.error('Database INSERT error:', error);
       }

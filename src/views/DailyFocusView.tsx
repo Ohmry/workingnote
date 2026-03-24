@@ -5,8 +5,10 @@ import MarkdownRenderer from '../components/MarkdownRenderer';
 import { useTaskStore } from '../store/useTaskStore';
 import Checkbox from '../components/Checkbox';
 import ConfirmDialog from '../components/ConfirmDialog';
+import TagPicker from '../components/TagPicker';
+import ContextMenu from '../components/ContextMenu';
 import styles from './DailyFocusView.module.css';
-import { ArrowLeft, Trash2, Edit3, Eye, CalendarDays, ArrowUpDown } from 'lucide-react';
+import { ArrowLeft, Trash2, Edit3, Eye, CalendarDays, ArrowUpDown, Tag as TagIcon } from 'lucide-react';
 
 interface DailyFocusViewProps {
   date: string; // YYYY-MM-DD
@@ -15,7 +17,7 @@ interface DailyFocusViewProps {
 }
 
 const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onToggleTask }) => {
-  const { tasks, addTask, updateTask, deleteTask, getNote, saveNote, config } = useTaskStore();
+  const { tasks, addTask, updateTask, deleteTask, getNote, saveNote, config, addTag } = useTaskStore();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const isLandscape = config.dailyNoteLayout === 'horizontal';
   
@@ -35,11 +37,17 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
 
   const [localTaskTitle, setLocalTaskTitle] = useState('');
   const [localTaskDesc, setLocalTaskDesc] = useState('');
+  const [localTaskTags, setLocalTaskTags] = useState<string[]>([]);
 
   const [filterStatus, setFilterStatus] = useState<'all' | 'todo' | 'done'>('all');
   const [sortBy] = useState<'order' | 'status' | 'title'>('order');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Context Menu State
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, isOpen: boolean, taskId: string | null }>({
+    x: 0, y: 0, isOpen: false, taskId: null
+  });
 
   const selectedTask = tasks.find(t => t.id === selectedTaskId);
 
@@ -54,6 +62,7 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
     if (task) {
       setLocalTaskTitle(task.title);
       setLocalTaskDesc(task.description || '');
+      setLocalTaskTags(task.tags || []);
       setSelectedTaskId(id);
     }
   };
@@ -67,8 +76,17 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
 
   const saveTaskChanges = async () => {
     if (selectedTaskId) {
-      await updateTask(selectedTaskId, { title: localTaskTitle, description: localTaskDesc });
+      await updateTask(selectedTaskId, { 
+        title: localTaskTitle, 
+        description: localTaskDesc,
+        tags: localTaskTags 
+      });
     }
+  };
+
+  const handleDeleteClick = (id?: string) => {
+    if (id) setSelectedTaskId(id);
+    setIsConfirmOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
@@ -77,6 +95,38 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
       setSelectedTaskId(null);
       setIsConfirmOpen(false);
     }
+  };
+
+  const handleToggleTag = (tagName: string) => {
+    setLocalTaskTags(prev => {
+      const newTags = prev.includes(tagName) 
+        ? prev.filter(t => t !== tagName) 
+        : [...prev, tagName];
+      
+      if (selectedTaskId) {
+        updateTask(selectedTaskId, { tags: newTags });
+      }
+      return newTags;
+    });
+  };
+
+  const handleAddNewTag = async (tagName: string) => {
+    await addTag(tagName);
+    const newTags = [...localTaskTags, tagName];
+    setLocalTaskTags(newTags);
+    if (selectedTaskId) {
+      updateTask(selectedTaskId, { tags: newTags });
+    }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, taskId: string) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      isOpen: true,
+      taskId
+    });
   };
 
   const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -165,8 +215,17 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
             <>
               <div className={styles.detailHeader}>
                 <button className={styles.backButton} onClick={() => { saveTaskChanges(); setSelectedTaskId(null); }}><ArrowLeft size={18} /></button>
-                <input className={styles.detailTitleInput} value={localTaskTitle} onChange={(e) => setLocalTaskTitle(e.target.value)} onBlur={saveTaskChanges} />
-                <button className={styles.deleteButton} onClick={() => setIsConfirmOpen(true)}><Trash2 size={18} /></button>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <input className={styles.detailTitleInput} value={localTaskTitle} onChange={(e) => setLocalTaskTitle(e.target.value)} onBlur={saveTaskChanges} />
+                  <div style={{ padding: '0 4px' }}>
+                    <TagPicker 
+                      selectedTags={localTaskTags} 
+                      onToggleTag={handleToggleTag} 
+                      onAddTag={handleAddNewTag}
+                    />
+                  </div>
+                </div>
+                <button className={styles.deleteButton} onClick={() => handleDeleteClick()} style={{ alignSelf: 'flex-start', marginTop: '4px' }}><Trash2 size={18} /></button>
               </div>
               <textarea className={styles.markdownEditor} placeholder="상세 내용..." value={localTaskDesc} onChange={(e) => setLocalTaskDesc(e.target.value)} onBlur={saveTaskChanges} autoFocus />
             </>
@@ -190,9 +249,24 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
                   <div className={styles.emptyState}>해당하는 업무가 없습니다.</div>
                 ) : (
                   todayTasks.map(task => (
-                    <li key={task.id} className={styles.taskItem}>
+                    <li 
+                      key={task.id} 
+                      className={styles.taskItem}
+                      onContextMenu={(e) => handleContextMenu(e, task.id)}
+                    >
                       <Checkbox checked={task.status === 'done'} onChange={() => onToggleTask(task.id)} />
-                      <span className={styles.taskTitle} onClick={() => handleSelectTask(task.id)}>{task.title}</span>
+                      <div className={styles.taskTitle} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }} onClick={() => handleSelectTask(task.id)}>
+                        <span>{task.title}</span>
+                        {task.tags && task.tags.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                            {task.tags.map(tag => (
+                              <span key={tag} style={{ fontSize: '10px', padding: '1px 5px', backgroundColor: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-sub)' }}>
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </li>
                   ))
                 )}
@@ -219,9 +293,58 @@ const DailyFocusView: React.FC<DailyFocusViewProps> = ({ date, onDateSelect, onT
           )}
         </section>
       </div>
+
+      <ContextMenu 
+        {...contextMenu}
+        onClose={() => setContextMenu(prev => ({ ...prev, isOpen: false }))}
+        items={[
+          {
+            label: '상세 보기',
+            icon: <Edit3 size={14} />,
+            onClick: () => contextMenu.taskId && handleSelectTask(contextMenu.taskId)
+          },
+          {
+            label: '삭제',
+            icon: <Trash2 size={14} />,
+            onClick: () => contextMenu.taskId && handleDeleteClick(contextMenu.taskId),
+            isDanger: true
+          }
+        ]}
+      >
+        <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-sub)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <TagIcon size={12} /> 라벨 관리
+        </div>
+        <TagPicker 
+          selectedTags={tasks.find(t => t.id === contextMenu.taskId)?.tags || []}
+          onToggleTag={(tagName) => {
+            if (contextMenu.taskId) {
+              const task = tasks.find(t => t.id === contextMenu.taskId);
+              if (task) {
+                const newTags = task.tags.includes(tagName)
+                  ? task.tags.filter(t => t !== tagName)
+                  : [...task.tags, tagName];
+                updateTask(contextMenu.taskId, { tags: newTags });
+                if (contextMenu.taskId === selectedTaskId) setLocalTaskTags(newTags);
+              }
+            }
+          }}
+          onAddTag={async (tagName) => {
+            if (contextMenu.taskId) {
+              await addTag(tagName);
+              const task = tasks.find(t => t.id === contextMenu.taskId);
+              if (task) {
+                const newTags = [...task.tags, tagName];
+                updateTask(contextMenu.taskId, { tags: newTags });
+                if (contextMenu.taskId === selectedTaskId) setLocalTaskTags(newTags);
+              }
+            }
+          }}
+        />
+      </ContextMenu>
     </div>
   );
 };
 
 export default DailyFocusView;
+
 
