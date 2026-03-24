@@ -98,10 +98,19 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       };
 
       const tasks: Task[] = (tasksRaw || []).map(t => ({
-        ...t,
+        id: t.id,
+        title: t.title,
+        description: t.description,
+        status: t.status,
+        priority: t.priority,
         order: t.task_order ?? 0,
+        dueDate: t.due_date,
+        categoryId: t.category_id,
         isDeleted: t.is_deleted === 1 || t.is_deleted === true,
-        subTasks: [], // SQLite currently doesn't store subtasks in a separate table, maybe JSON in description?
+        deletedAt: t.deleted_at,
+        createdAt: t.created_at,
+        updatedAt: t.updated_at,
+        subTasks: [],
         tags: (taskTagsRaw || [])
           .filter(tt => tt.task_id === t.id)
           .map(tt => tt.tag_name)
