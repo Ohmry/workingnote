@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { 
   Calendar, 
   Trash2, 
@@ -33,6 +33,20 @@ const Sidebar: React.FC<SidebarProps> = ({
   searchQuery,
   onSearchChange
 }) => {
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSearchClick = () => {
+    if (isCollapsed) {
+      onToggle();
+      // Wait for transition to complete or at least for input to mount
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    } else {
+      searchInputRef.current?.focus();
+    }
+  };
+
   return (
     <aside className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ''}`}>
       <div className={styles.header}>
@@ -40,14 +54,20 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <div className={styles.searchSection}>
-        <div className={styles.searchBar}>
+        <div 
+          className={styles.searchBar} 
+          onClick={handleSearchClick}
+          style={{ cursor: 'pointer' }}
+        >
           <Search size={16} className={styles.searchIcon} />
           {!isCollapsed && (
             <input 
+              ref={searchInputRef}
               className={styles.searchInput}
               placeholder="검색..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
+              autoFocus={activeView === 'search'}
             />
           )}
         </div>

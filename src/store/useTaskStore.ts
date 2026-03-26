@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { invoke } from '@tauri-apps/api/core';
 import Database from '@tauri-apps/plugin-sql';
 import { Task, DailyNote, Category, Tag, Status, AppConfig, SecureNote } from '../types';
 

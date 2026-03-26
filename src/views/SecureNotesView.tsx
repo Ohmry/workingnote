@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTaskStore } from '../store/useTaskStore';
 import styles from './DailyFocusView.module.css';
 import { Lock, Unlock, Plus, Trash2, Edit3, Eye, ShieldCheck, ChevronRight } from 'lucide-react';
@@ -24,9 +24,22 @@ const SecureNotesView: React.FC = () => {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [error, setError] = useState('');
+  
+  // Local content state to fix input overlapping/lag issue
+  const [localContent, setLocalContent] = useState('');
 
   const currentNote = secureNotes.find(n => n.id === selectedNoteId);
+
+  // Sync local content when note changes
+  useEffect(() => {
+    if (currentNote) {
+      setLocalContent(currentNote.content || '');
+    } else {
+      setLocalContent('');
+    }
+  }, [selectedNoteId]);
 
   const handleDeleteConfirm = () => {
     if (selectedNoteId) {
@@ -34,6 +47,21 @@ const SecureNotesView: React.FC = () => {
       setSelectedNoteId(null);
     }
     setIsConfirmOpen(false);
+  };
+
+  const handleAddNote = (title?: string) => {
+    if (title && title.trim()) {
+      addSecureNote(title.trim());
+    }
+    setIsAddModalOpen(false);
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setLocalContent(newValue);
+    if (selectedNoteId) {
+      updateSecureNote(selectedNoteId, { content: newValue });
+    }
   };
 
   const handleUnlock = (e: React.FormEvent) => {
@@ -102,7 +130,15 @@ const SecureNotesView: React.FC = () => {
             <p className={styles.subtitle}>암호로 보호되는 민감한 메모입니다.</p>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button className={styles.backButton} onClick={() => { const t = prompt('제목:'); if(t) addSecureNote(t); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}>
+            <button className={styles.backButton} onClick={async () => {
+              for(let i=1; i<=20; i++) {
+                await addSecureNote(`테스트 메모 ${i}`);
+              }
+              alert('20개의 테스트 메모가 생성되었습니다.');
+            }} style={{ fontSize: '12px' }}>
+              일괄 생성 (테스트)
+            </button>
+            <button className={styles.backButton} onClick={() => setIsAddModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}>
               <Plus size={16} /> 새 메모
             </button>
             <button className={styles.backButton} onClick={lockVault} title="잠그기">
@@ -112,10 +148,10 @@ const SecureNotesView: React.FC = () => {
         </div>
       </header>
 
-      <div style={{ flex: 1, display: 'flex', gap: '24px' }}>
-        <section className={styles.card} style={{ width: '300px' }}>
+      <div style={{ flex: 1, display: 'flex', gap: '24px', minHeight: 0 }}>
+        <section className={styles.card} style={{ width: '300px', display: 'flex', flexDirection: 'column' }}>
           <div className={styles.controlsRow} style={{ padding: '12px 20px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-sub)' }}>메모 목록</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-sub)' }}>메모 목록 ({secureNotes.length})</span>
           </div>
           <ul className={styles.taskList}>
             {secureNotes.map(note => (
@@ -147,7 +183,13 @@ const SecureNotesView: React.FC = () => {
                 </div>
               </div>
               {isEditMode ? (
-                <textarea className={styles.markdownEditor} value={currentNote.content} onChange={(e) => updateSecureNote(currentNote.id, { content: e.target.value })} autoFocus />
+                <textarea 
+                  className={styles.markdownEditor} 
+                  value={localContent} 
+                  onChange={handleContentChange} 
+                  autoFocus 
+                  placeholder="메모 내용을 입력하세요..."
+                />
               ) : (
                 <MarkdownRenderer content={currentNote.content || '*내용이 없습니다.*'} />
               )}
@@ -160,14 +202,25 @@ const SecureNotesView: React.FC = () => {
           )}
         </section>
       </div>
+
       <ConfirmDialog 
         isOpen={isConfirmOpen}
         title="영구 삭제"
-        message="영구 삭제하시겠습니까?"
+        message="이 메모를 영구적으로 삭제하시겠습니까?"
         confirmLabel="삭제"
         onConfirm={handleDeleteConfirm}
         onCancel={() => setIsConfirmOpen(false)}
         isDanger={true}
+      />
+
+      <ConfirmDialog 
+        isOpen={isAddModalOpen}
+        title="새 비밀 메모"
+        showInput={true}
+        inputPlaceholder="메모 제목을 입력하세요"
+        confirmLabel="생성"
+        onConfirm={handleAddNote}
+        onCancel={() => setIsAddModalOpen(false)}
       />
     </div>
   );

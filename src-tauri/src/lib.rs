@@ -5,21 +5,26 @@ use tauri_plugin_sql::{Migration, MigrationKind};
 #[tauri::command]
 fn get_db_folder_path(app_handle: tauri::AppHandle) -> String {
     let mut path = app_handle.path().local_data_dir().expect("Failed to get local data dir");
-    path.push("workingnote");
+    path.push("Working Note");
     path.to_string_lossy().to_string()
 }
 
 #[tauri::command]
 fn get_data_path_string(app_handle: tauri::AppHandle) -> String {
     let mut path = app_handle.path().local_data_dir().expect("Failed to get local data dir");
-    path.push("workingnote");
+    path.push("Working Note");
     path.push("workingnote.db");
     path.to_string_lossy().to_string()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let migrations = vec![
+    tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(
+            tauri_plugin_sql::Builder::default()
+                .add_migrations("sqlite:workingnote.db", vec![
         Migration {
             version: 1,
             description: "create initial tables",
@@ -70,6 +75,13 @@ pub fn run() {
                     color TEXT NOT NULL,
                     category_order REAL NOT NULL
                 );
+            ",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "add config table",
+            sql: "
                 CREATE TABLE IF NOT EXISTS config (
                     key TEXT PRIMARY KEY,
                     value TEXT NOT NULL
@@ -77,25 +89,34 @@ pub fn run() {
             ",
             kind: MigrationKind::Up,
         }
-    ];
-
-    tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(
-            tauri_plugin_sql::Builder::default()
-                .add_migrations("sqlite:workingnote.db", migrations)
+    ])
                 .build(),
         )
         .invoke_handler(tauri::generate_handler![get_data_path_string, get_db_folder_path])
         .setup(|app| {
-            // Ensure directory exists
             let path = app.path().local_data_dir().expect("Failed to get local data dir");
-            let mut app_path = path.clone();
-            app_path.push("workingnote");
-            if !app_path.exists() {
-                let _ = fs::create_dir_all(&app_path);
+            
+            // New default path: .../Local/workingnote/workingnote.db
+            let mut new_app_path = path.clone();
+            new_app_path.push("workingnote");
+            if !new_app_path.exists() {
+                let _ = fs::create_dir_all(&new_app_path);
             }
+
+            // Old path: .../Local/Working Note/workingnote.db
+            let mut old_app_path = path.clone();
+            old_app_path.push("Working Note");
+            let mut old_db_path = old_app_path.clone();
+            old_db_path.push("workingnote.db");
+
+            if old_db_path.exists() {
+                let mut new_db_path = new_app_path.clone();
+                new_db_path.push("workingnote.db");
+                if !new_db_path.exists() {
+                    let _ = fs::copy(&old_db_path, &new_db_path);
+                }
+            }
+
             Ok(())
         })
         .run(tauri::generate_context!())

@@ -33,12 +33,9 @@ function App() {
   useEffect(() => {
     const init = async () => {
       try {
-        const dbPath = await invoke<string>('get_data_path_string');
-        const dbFolder = await invoke<string>('get_db_folder_path');
-        console.log('--- DATABASE PATH INFO ---');
-        console.log('DB File Path:', dbPath);
-        console.log('DB Folder Path:', dbFolder);
-        console.log('--------------------------');
+        console.log('--- DATABASE INFO ---');
+        console.log('DB Name:', 'workingnote.db');
+        console.log('---------------------');
         
         await loadData();
       } catch (err) {
