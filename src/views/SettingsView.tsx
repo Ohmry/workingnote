@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTaskStore } from '../store/useTaskStore';
 import styles from './SettingsView.module.css';
 import { invoke } from '@tauri-apps/api/core';
+import { getVersion } from '@tauri-apps/api/app';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { 
   FolderOpen, 
@@ -16,7 +17,19 @@ import {
 
 const SettingsView: React.FC = () => {
   const { config, updateConfig, vaultPassword } = useTaskStore();
-  const version = "0.2.0"; // Updated for release 0.2.0
+  const [version, setVersion] = useState<string>('0.0.0');
+
+  useEffect(() => {
+    const fetchVersion = async () => {
+      try {
+        const appVersion = await getVersion();
+        setVersion(appVersion);
+      } catch (error) {
+        console.error('Failed to fetch app version:', error);
+      }
+    };
+    fetchVersion();
+  }, []);
 
   const handleOpenFolder = async () => {
     try {
